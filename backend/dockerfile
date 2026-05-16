@@ -1,24 +1,25 @@
-# On prend Node 24.13.1
+# Node 24.13.1
 FROM node:24.13.1
+
 WORKDIR /app
 
-# Installer les dépendances de compilation pour les modules natifs
-# RUN apt-get update && apt-get install -y python3 build-essential && rm -rf /var/lib/apt/lists/*
+# Activer corepack (pour pnpm sans installation globale)
+RUN corepack enable
 
-# Copier package.json et package-lock.json
-COPY package.json package-lock.json ./
+# Copier manifests uniquement (optimisation cache Docker)
+COPY package.json pnpm-lock.yaml ./
 
-# Installer les dépendances (y compris devDependencies pour la compilation TypeScript)
-RUN npm ci
+# Installer dépendances via pnpm (équivalent npm ci)
+RUN pnpm install --frozen-lockfile
 
-# Copier tout le code source
+# Copier le reste du code
 COPY . .
 
-# Compiler TypeScript et afficher les erreurs
-RUN npm run build && ls -la dist/
+# Build TypeScript
+RUN pnpm build && ls -la dist/
 
-# Exposer le port du backend
+# Exposer le port backend
 EXPOSE 3000
 
-# Démarrage du serveur
-CMD ["npm", "start"]
+# Démarrage
+CMD ["pnpm", "start"]

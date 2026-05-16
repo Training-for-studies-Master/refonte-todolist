@@ -1,7 +1,21 @@
 FROM node:24.13.1
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+# Activer pnpm via Corepack
+RUN corepack enable
+
+# Copier uniquement les manifests pour cache Docker
+COPY package.json pnpm-lock.yaml ./
+
+# Installer les dépendances (équivalent npm install)
+RUN pnpm install --frozen-lockfile
+
+# Copier le code source
 COPY . .
+
+# Exposer le port Vite
 EXPOSE 5173
-CMD ["npx", "vite", "--host"]
+
+# Lancer Vite
+CMD ["pnpm", "vite", "--host"]

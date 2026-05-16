@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+      - "feature/**"
+
+  pull_request:
+    branches:
+      - develop
+      - main
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      services: ${{ steps.filter.outputs.services }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            gateway:
+              - 'gateway/**'
+            services:
+              - 'services/**'
+
+  build-frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - run: pnpm install
+      - run: pnpm --filter frontend build
+
+  build-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - run: pnpm install
+      - run: pnpm --filter backend build
+
+  build-gateway:
+    needs: changes
+    if: needs.changes.outputs.gateway == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - run: pnpm install
+      - run: pnpm --filter gateway build
+
+  build-services:
+    needs: changes
+    if: needs.changes.outputs.services == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: corepack enable
+      - run: pnpm install
+      - run: pnpm --filter "services/*" build

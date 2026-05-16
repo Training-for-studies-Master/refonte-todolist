@@ -1,8 +1,24 @@
 FROM node:20-alpine
+
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+
+# Activer corepack (pnpm sans installation globale)
+RUN corepack enable
+
+# Copier uniquement les manifests (cache Docker optimisé)
+COPY package.json pnpm-lock.yaml ./
+
+# Installation reproductible (équivalent npm ci)
+RUN pnpm install --frozen-lockfile
+
+# Copier le code source
 COPY . .
-RUN npm run build
+
+# Build TypeScript / app
+RUN pnpm build
+
+# Exposer le port
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+
+# Démarrage
+CMD ["pnpm", "start"]
