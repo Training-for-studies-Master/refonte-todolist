@@ -94,3 +94,20 @@ jobs:
     steps:
       - name: CI final status
         run: echo "CI completed successfully"
+
+  auto-merge:
+    needs: ci-gate
+    if: success()
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Enable auto-merge (GitHub official action)
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
