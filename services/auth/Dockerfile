@@ -2,23 +2,23 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Activer pnpm via Corepack
 RUN corepack enable
 
-# Copier manifests (cache Docker)
-COPY package.json pnpm-lock.yaml ./
+# Copier workspace root 
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Installation reproductible (équivalent npm ci)
-RUN pnpm install --frozen-lockfile
-
-# Copier le code source
+# Copier tout le monorepo
 COPY . .
 
-# Build de l’application
-RUN pnpm build
+# Installer deps 
+RUN pnpm install --frozen-lockfile
 
-# Exposer le port
+# Build uniquement auth
+RUN pnpm --filter auth build
+
 EXPOSE 3001
 
-# Démarrage
-CMD ["pnpm", "start"]
+# Run uniquement auth
+CMD ["pnpm", "--filter", "auth", "start"]

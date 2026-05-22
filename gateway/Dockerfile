@@ -2,23 +2,23 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Activer corepack (pnpm sans installation globale)
 RUN corepack enable
 
-# Copier uniquement les manifests (cache Docker optimisé)
-COPY package.json pnpm-lock.yaml ./
+# Copier workspace root 
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Installation reproductible (équivalent npm ci)
-RUN pnpm install --frozen-lockfile
-
-# Copier le code source
+# Copier tout le monorepo
 COPY . .
 
-# Build TypeScript / app
-RUN pnpm build
+# Installer dependances
+RUN pnpm install --frozen-lockfile
 
-# Exposer le port
+#  Build uniquement gateway
+RUN pnpm --filter gateway build
+
 EXPOSE 3000
 
-# Démarrage
-CMD ["pnpm", "start"]
+# 5. Run uniquement gateway
+CMD ["pnpm", "--filter", "gateway", "start"]

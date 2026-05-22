@@ -1,25 +1,22 @@
-# Node 24.13.1
-FROM node:24.13.1
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Activer corepack (pour pnpm sans installation globale)
 RUN corepack enable
 
-# Copier manifests uniquement (optimisation cache Docker)
-COPY package.json pnpm-lock.yaml ./
+# Copier uniquement les fichiers workspace
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Installer dépendances via pnpm (équivalent npm ci)
-RUN pnpm install --frozen-lockfile
-
-# Copier le reste du code
+# Copier tout le monorepo
 COPY . .
 
-# Build TypeScript
-RUN pnpm build && ls -la dist/
+RUN pnpm install --frozen-lockfile
 
-# Exposer le port backend
+# Builder seulement ce package 
+RUN pnpm --filter backend build
+
 EXPOSE 3000
 
-# Démarrage
-CMD ["pnpm", "start"]
+CMD ["pnpm", "--filter", "backend", "start"]

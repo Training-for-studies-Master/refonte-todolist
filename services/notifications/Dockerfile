@@ -1,21 +1,19 @@
-FROM node:20
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Activer pnpm via Corepack (pas d'installation globale)
 RUN corepack enable
 
-# Copier manifests (optimisation cache Docker)
-COPY package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Installation reproductible (équivalent npm install propre)
-RUN pnpm install --frozen-lockfile
-
-# Copier le reste du code
 COPY . .
 
-# Build de l'application
-RUN pnpm build
+RUN pnpm install --frozen-lockfile
 
-# Démarrage
-CMD ["pnpm", "start"]
+RUN pnpm --filter notifications build
+
+EXPOSE 3002
+
+CMD ["pnpm", "--filter", "notifications", "start"]

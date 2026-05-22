@@ -1,21 +1,24 @@
-FROM node:24.13.1
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Activer pnpm via Corepack
 RUN corepack enable
 
-# Copier uniquement les manifests pour cache Docker
-COPY package.json pnpm-lock.yaml ./
+# 1. Copier workspace (IMPORTANT)
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Installer les dépendances (équivalent npm install)
-RUN pnpm install --frozen-lockfile
-
-# Copier le code source
+# 2. Copier tout le repo (monorepo)
 COPY . .
 
-# Exposer le port Vite
+# 3. Installer deps (workspace aware)
+RUN pnpm install --frozen-lockfile
+
+# 4. Build uniquement frontend
+RUN pnpm --filter frontend build
+
 EXPOSE 5173
 
-# Lancer Vite
-CMD ["pnpm", "vite", "--host"]
+# Vite preview (recommandé en prod-like container)
+CMD ["pnpm", "--filter", "frontend", "preview", "--host"]
