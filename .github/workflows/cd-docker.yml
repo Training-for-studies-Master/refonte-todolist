@@ -1,4 +1,4 @@
-name: Docker CD (GHCR + Buildx)
+name: Build and Publish Docker Images
 
 on:
   push:
@@ -8,8 +8,15 @@ jobs:
   docker:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Convert owner to lowercase
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -32,8 +39,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/backend:latest
-            ghcr.io/${{ github.repository_owner }}/backend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/backend:latest
+            ghcr.io/${{ env.OWNER_LC }}/backend:${{ github.sha }}
 
       - name: Build & Push Frontend
         uses: docker/build-push-action@v5
@@ -43,8 +50,8 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/frontend:latest
-            ghcr.io/${{ github.repository_owner }}/frontend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/frontend:latest
+            ghcr.io/${{ env.OWNER_LC }}/frontend:${{ github.sha }}
 
       - name: Build & Push Gateway
         uses: docker/build-push-action@v5
@@ -54,5 +61,5 @@ jobs:
           push: true
           platforms: linux/amd64,linux/arm64
           tags: |
-            ghcr.io/${{ github.repository_owner }}/gateway:latest
-            ghcr.io/${{ github.repository_owner }}/gateway:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/gateway:latest
+            ghcr.io/${{ env.OWNER_LC }}/gateway:${{ g
