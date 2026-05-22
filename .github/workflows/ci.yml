@@ -41,7 +41,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -52,7 +51,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -63,7 +61,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -74,7 +71,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.services == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -87,27 +83,37 @@ jobs:
       - build-backend
       - build-gateway
       - build-services
-
     if: always()
     runs-on: ubuntu-latest
-
     steps:
-      - name: CI final status
-        run: echo "CI completed successfully"
+      - name: Check all builds succeeded or were skipped
+        run: |
+          results=(
+            "${{ needs.build-frontend.result }}"
+            "${{ needs.build-backend.result }}"
+            "${{ needs.build-gateway.result }}"
+            "${{ needs.build-services.result }}"
+          )
+          for result in "${results[@]}"; do
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              echo "❌ Build job failed with status: $result"
+              exit 1
+            fi
+          done
+          echo "✅ All builds passed or were skipped"
 
+  # PAT + numéro de PR explicite
   auto-merge:
     needs: ci-gate
     if: success()
-
     runs-on: ubuntu-latest
-
     permissions:
       contents: write
       pull-requests: write
-
     steps:
-      - name: Enable auto-merge (GitHub official action)
+      - name: Enable auto-merge
         uses: peter-evans/enable-pull-request-automerge@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}          # ← PAT au lieu de GITHUB_TOKEN
           merge-method: squash
+          pull-request-number: ${{ github.event.pull_request.number }}
