@@ -41,6 +41,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -51,6 +52,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -61,6 +63,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -71,6 +74,7 @@ jobs:
     needs: changes
     if: needs.changes.outputs.services == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -83,12 +87,16 @@ jobs:
       - build-backend
       - build-gateway
       - build-services
+
     if: success()
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
-      - name: Enable auto-merge on PR
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          merge-method: squash
+      - name: Enable auto-merge (GitHub CLI)
+        run: gh pr merge ${{ github.event.pull_request.number }} --auto --squash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
