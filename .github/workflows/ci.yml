@@ -102,6 +102,15 @@ jobs:
           done
           echo "✅ All builds passed or were skipped"
 
+  debug:
+    needs: ci-gate
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "ci-gate result = ${{ needs.ci-gate.result }}"
+          echo "job status = ${{ job.status }}"
+
   # PAT + numéro de PR explicite
   auto-merge:
     needs: ci-gate
