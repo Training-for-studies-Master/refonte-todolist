@@ -6,9 +6,14 @@ on:
       - develop
       - main
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
+
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -36,7 +41,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -47,7 +51,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -58,7 +61,6 @@ jobs:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
@@ -69,9 +71,24 @@ jobs:
     needs: changes
     if: needs.changes.outputs.services == 'true'
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - run: corepack enable
       - run: pnpm install
       - run: pnpm --filter "services/*" build
+
+  auto-merge:
+    needs:
+      - build-frontend
+      - build-backend
+      - build-gateway
+      - build-services
+    if: success()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enable auto-merge on PR
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: squash
