@@ -2,24 +2,19 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Optionnel mais recommandé (modules natifs + pnpm)
 RUN apk add --no-cache python3 make g++ \
  && corepack enable
 
-# Copier manifests (cache Docker)
-COPY package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
 
-# Install reproductible (équivalent npm ci)
-RUN pnpm install --frozen-lockfile
-
-# Copier le code source
 COPY . .
 
-# Build
-RUN pnpm build
+RUN pnpm install --frozen-lockfile
 
-# Exposer le port
-EXPOSE 3002
+RUN pnpm --filter tasks build
 
-# Start
-CMD ["pnpm", "start"]
+EXPOSE 3003
+
+CMD ["pnpm", "--filter", "tasks", "start"]
