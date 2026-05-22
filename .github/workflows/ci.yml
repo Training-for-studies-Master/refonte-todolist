@@ -105,7 +105,7 @@ jobs:
   # PAT + numéro de PR explicite
   auto-merge:
     needs: ci-gate
-    if: needs.ci-gate.result == 'success'
+    if: ${{ needs.ci-gate.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
