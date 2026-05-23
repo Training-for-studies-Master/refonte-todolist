@@ -11,9 +11,10 @@ COPY package.json ./
 
 COPY . .
 
+ENV NODE_ENV=development
 RUN pnpm install --frozen-lockfile
 
-RUN pnpm --filter projects build
+RUN pnpm --filter projects exec pnpm run build
 
 EXPOSE 3003
 

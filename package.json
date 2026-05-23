@@ -1,5 +1,6 @@
 {
   "name": "refonte-todolist",
+  "private": true,
   "version": "1.0.0",
   "packageManager": "pnpm@9.0.0",
   "description": "Ce projet est une refonte de l'application  :\r https://github.com/docker/getting-started",
@@ -9,13 +10,15 @@
   },
   "scripts": {
     "test": "jest",
-    "test:integration": "jest tests/integration"
+    "test:integration": "jest tests/integration",
+    "build": "pnpm -r build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^30.0.0",
+    "@types/node": "^25.9.1",
     "@types/uuid": "^10.0.0",
     "jest": "^30.3.0",
     "ts-jest": "^29.4.6",

@@ -16,7 +16,9 @@ services:
       - "15672:15672"
 
   auth:
-    build: ./services/auth
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
     environment:
       PORT: 3001
       MYSQL_HOST: mysql
@@ -29,7 +31,9 @@ services:
       - "3001:3001"
 
   tasks:
-    build: ./services/tasks
+    build:
+      context: .
+      dockerfile: services/tasks/Dockerfile
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
@@ -45,7 +49,9 @@ services:
       - "3002:3002"
 
   projects:
-    build: ./services/projects
+    build:
+      context: .
+      dockerfile: services/projects/Dockerfile
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
@@ -61,7 +67,9 @@ services:
       - "3003:3003"
 
   gateway:
-    build: ./gateway
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
     environment:
       PORT: 3000
       AUTH_URL: http://auth:3001
@@ -75,7 +83,9 @@ services:
       - "3000:3000"
 
   frontend:
-    build: ./frontend
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
     container_name: todolist-frontend
     ports:
       - "5173:5173"
@@ -86,7 +96,9 @@ services:
       - /app/node_modules
 
   notifications:
-    build: ./services/notifications
+    build:
+      context: .
+      dockerfile: services/notifications/Dockerfile
     environment:
       MYSQL_HOST: mysql
       MYSQL_USER: root
