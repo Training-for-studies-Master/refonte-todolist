@@ -1,0 +1,1 @@
+Choix de faire un test d'intégration du gateway à la persitance ainsi qu'un test playwright en END to END. 

@@ -1,6 +1,10 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
+
+ENV CI=true
+ENV PNPM_CONFIG_IGNORE_SCRIPTS=false
+ENV PNPM_CONFIG_AUTO_INSTALL_PEERS=true
 
 RUN corepack enable
 
@@ -13,7 +17,7 @@ COPY package.json ./
 COPY . .
 
 # 3. Installer deps (workspace aware)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --no-frozen-lockfile --unsafe-perm
 
 # 4. Build uniquement frontend
 RUN pnpm --filter frontend build
@@ -21,4 +25,4 @@ RUN pnpm --filter frontend build
 EXPOSE 5173
 
 # Vite preview (recommandé en prod-like container)
-CMD ["pnpm", "--filter", "frontend", "preview", "--host"]
+CMD ["pnpm", "--filter", "frontend", "dev", "--host", "0.0.0.0", "--port", "5173"]

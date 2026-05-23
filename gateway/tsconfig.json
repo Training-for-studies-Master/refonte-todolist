@@ -7,7 +7,7 @@
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["node","jest"]
   },
   "include": ["src", "todelete/sqlite.ts", "todelete/mysql.ts"],
   "exclude": ["node_modules", "dist","spec"]
