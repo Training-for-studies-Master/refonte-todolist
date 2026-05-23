@@ -12,11 +12,12 @@ COPY package.json ./
 # Copier tout le monorepo
 COPY . .
 
+ENV NODE_ENV=development
 # Installer dependances
 RUN pnpm install --frozen-lockfile
 
 #  Build uniquement gateway
-RUN pnpm --filter gateway build
+RUN pnpm --filter gateway exec pnpm run build
 
 EXPOSE 3000
 

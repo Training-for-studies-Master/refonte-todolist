@@ -12,11 +12,12 @@ COPY package.json ./
 # Copier tout le monorepo
 COPY . .
 
+ENV NODE_ENV=development
 # Installer deps 
 RUN pnpm install --frozen-lockfile
 
 # Build uniquement auth
-RUN pnpm --filter auth build
+RUN pnpm --filter auth exec pnpm run build
 
 EXPOSE 3001
 
