@@ -1,3 +1,6 @@
+process.env.AUTH_URL = "http://localhost:3001";
+process.env.TASKS_URL = "http://localhost:3002";
+process.env.PROJECTS_URL = "http://localhost:3003";
 import request from "supertest";
 import app from "../src/app";
 
