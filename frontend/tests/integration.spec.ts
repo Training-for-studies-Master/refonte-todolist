@@ -91,7 +91,7 @@ test.describe('TodoList Frontend (Mock API)', () => {
         let tasks = [
             {
                 id: 't1',
-                title: 'Task Mock',
+                name: 'Task Mock',
                 status: 'OPEN',
                 projectId: 'p1',
             },
@@ -111,7 +111,7 @@ test.describe('TodoList Frontend (Mock API)', () => {
 
                 const newTask = {
                     id: `t-${Date.now()}`,
-                    name: body.title,
+                    name: body.name,
                     status: 'OPEN',
                     projectId: body.projectId,
                 };
