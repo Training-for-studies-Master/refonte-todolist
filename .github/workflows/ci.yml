@@ -103,34 +103,18 @@ jobs:
           echo "✅ All builds passed or were skipped"
 
   # PAT + numéro de PR explicite
-  # auto-merge:
-  #   needs: ci-gate
-  #   if: ${{ needs.ci-gate.result == 'success' }}
-  #   runs-on: ubuntu-latest
-  #   permissions:
-  #     contents: write
-  #     pull-requests: write
-  #   steps:
-  #     - name: Enable auto-merge
-  #       uses: peter-evans/enable-pull-request-automerge@v3
-  #       with:
-  #         token: ${{ secrets.PAT_TOKEN }}          
-  #         merge-method: squash
-  #         pull-request-number: ${{ github.event.pull_request.number }}
   auto-merge:
-    needs: ci-gate
-    if: always()
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - run: echo "result = ${{ needs.ci-gate.result }}"
-      
-      - name: Enable auto-merge
-        if: needs.ci-gate.result == 'success'
-        uses: peter-evans/enable-pull-request-automerge@v3
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
-          merge-method: squash
-          pull-request-number: ${{ github.event.pull_request.number }}
+      needs: ci-gate
+      if: always()
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+        pull-requests: write
+      steps:
+        - name: Enable auto-merge
+          if: needs.ci-gate.result == 'success'
+          uses: peter-evans/enable-pull-request-automerge@v3
+          with:
+            token: ${{ secrets.PAT_TOKEN }}
+            merge-method: squash
+            pull-request-number: ${{ github.event.pull_request.number }}
