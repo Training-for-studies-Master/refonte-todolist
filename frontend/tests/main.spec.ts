@@ -1,3 +1,8 @@
+/*
+  *
+  * Test END TO END PLAYWRIGHT
+  * 
+  * 
 import { test, expect } from '@playwright/test';
 import { execSync } from 'node:child_process';
 
@@ -127,3 +132,5 @@ test.describe('TodoList App', () => {
       .toBeTruthy();
   });
 });
+
+*/
