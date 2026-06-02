@@ -247,6 +247,9 @@ importers:
       tsx:
         specifier: ^4.21.0
         version: 4.22.0
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
 
   services/notifications:
     dependencies:
