@@ -231,9 +231,6 @@ sonar:
       - run: pnpm install
       - run: pnpm --filter "services/*" build
 
-
-  ci-gate:
-    needs:
 ci-gate:
   needs:
     - tests
