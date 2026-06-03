@@ -47,10 +47,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
 
       - name: Backend tests
@@ -75,10 +75,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
 
       - name: Backend coverage
@@ -99,10 +99,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
 
       - name: ESLint frontend
@@ -152,10 +152,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
 
       - name: SonarCloud Scan
@@ -174,10 +174,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
       - run: pnpm --filter frontend build
 
@@ -192,10 +192,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
       - run: pnpm --filter backend build
 
@@ -210,10 +210,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
       - run: pnpm --filter gateway build
 
@@ -228,10 +228,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
 
-      - run: corepack enable
-      - run: corepack prepare pnpm@latest --activate
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+
       - run: pnpm install
       - run: pnpm --filter "services/*" build
 
