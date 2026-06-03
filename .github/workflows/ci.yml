@@ -50,6 +50,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
 
       - name: Backend tests
@@ -77,6 +78,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
 
       - name: Backend coverage
@@ -100,6 +102,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
 
       - name: ESLint frontend
@@ -152,6 +155,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
 
       - name: SonarCloud Scan
@@ -173,6 +177,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
       - run: pnpm --filter frontend build
 
@@ -190,6 +195,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
       - run: pnpm --filter backend build
 
@@ -207,6 +213,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
       - run: pnpm --filter gateway build
 
@@ -224,6 +231,7 @@ jobs:
           cache: 'pnpm'
 
       - run: corepack enable
+      - run: corepack prepare pnpm@latest --activate
       - run: pnpm install
       - run: pnpm --filter "services/*" build
 
