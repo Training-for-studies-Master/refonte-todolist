@@ -26,3 +26,11 @@ frontend/playwright-report/
 frontend/blob-report/
 frontend/playwright/.cache/
 frontend/playwright/.auth/
+
+# Coverage reports
+coverage/
+**/coverage/
+
+
+# CSS généré par coverage report
+prettify.css
