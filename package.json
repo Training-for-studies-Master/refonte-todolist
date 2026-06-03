@@ -11,7 +11,8 @@
   "scripts": {
     "test": "jest",
     "test:integration": "jest tests/integration",
-    "build": "pnpm -r build"
+    "build": "pnpm -r build",
+    "seed:test": "node scripts/seed-test-user.js"
   },
   "keywords": [],
   "author": "",
