@@ -37,7 +37,6 @@ jobs:
             services:
               - 'services/**'
 
-
   tests:
     needs: changes
     runs-on: ubuntu-latest
@@ -111,7 +110,6 @@ jobs:
         if: needs.changes.outputs.backend == 'true'
         run: pnpm --filter backend lint
 
-
   hadolint:
     runs-on: ubuntu-latest
 
@@ -140,28 +138,26 @@ jobs:
       - name: Scan filesystem
         run: ./bin/trivy fs .
 
+  sonar:
+    runs-on: ubuntu-latest
 
-sonar:
-  runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-  steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
-        cache: 'pnpm'
+      - run: corepack enable
+      - run: pnpm install
 
-    - run: corepack enable
-    - run: pnpm install
-
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarqube-scan-action@v5
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   build-frontend:
     needs: changes
@@ -231,19 +227,18 @@ sonar:
       - run: pnpm install
       - run: pnpm --filter "services/*" build
 
-ci-gate:
-  needs:
-    - tests
-    - coverage
-    - lint
-    - hadolint
-    - trivy
-    - sonar
-    - build-frontend
-    - build-backend
-    - build-gateway
-    - build-services
-
+  ci-gate:
+    needs:
+      - tests
+      - coverage
+      - lint
+      - hadolint
+      - trivy
+      - sonar
+      - build-frontend
+      - build-backend
+      - build-gateway
+      - build-services
 
     if: always()
     runs-on: ubuntu-latest
@@ -272,7 +267,6 @@ ci-gate:
           done
 
           echo "✅ All CI checks passed or skipped"
-
 
   auto-merge:
     needs: ci-gate
