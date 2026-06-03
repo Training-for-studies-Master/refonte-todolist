@@ -37,12 +37,145 @@ jobs:
             services:
               - 'services/**'
 
+
+  tests:
+    needs: changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: corepack enable
+      - run: pnpm install
+
+      - name: Backend tests
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm --filter backend test
+
+      - name: Services tests
+        if: needs.changes.outputs.services == 'true'
+        run: pnpm --filter "services/*" test
+
+      - name: Frontend tests
+        if: needs.changes.outputs.frontend == 'true'
+        run: pnpm --filter frontend test
+
+  coverage:
+    needs: changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: corepack enable
+      - run: pnpm install
+
+      - name: Backend coverage
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm --filter backend test -- --coverage
+
+      - name: Services coverage
+        if: needs.changes.outputs.services == 'true'
+        run: pnpm --filter "services/*" test -- --coverage
+
+  lint:
+    needs: changes
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - run: corepack enable
+      - run: pnpm install
+
+      - name: ESLint frontend
+        if: needs.changes.outputs.frontend == 'true'
+        run: pnpm --filter frontend lint
+
+      - name: ESLint backend
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm --filter backend lint
+
+
+  hadolint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install hadolint
+        run: |
+          wget -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
+          chmod +x hadolint
+
+      - name: Run hadolint
+        run: |
+          find . -name Dockerfile -exec ./hadolint {} \;
+
+  trivy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+      - name: Scan filesystem
+        run: ./bin/trivy fs .
+
+
+sonar:
+  runs-on: ubuntu-latest
+
+  steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: 'pnpm'
+
+    - run: corepack enable
+    - run: pnpm install
+
+    - name: SonarCloud Scan
+      uses: SonarSource/sonarqube-scan-action@v5
+      env:
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+
   build-frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - run: corepack enable
       - run: pnpm install
       - run: pnpm --filter frontend build
@@ -51,8 +184,15 @@ jobs:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - run: corepack enable
       - run: pnpm install
       - run: pnpm --filter backend build
@@ -61,8 +201,15 @@ jobs:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - run: corepack enable
       - run: pnpm install
       - run: pnpm --filter gateway build
@@ -71,50 +218,79 @@ jobs:
     needs: changes
     if: needs.changes.outputs.services == 'true'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
       - run: corepack enable
       - run: pnpm install
       - run: pnpm --filter "services/*" build
 
+
   ci-gate:
     needs:
-      - build-frontend
-      - build-backend
-      - build-gateway
-      - build-services
+ci-gate:
+  needs:
+    - tests
+    - coverage
+    - lint
+    - hadolint
+    - trivy
+    - sonar
+    - build-frontend
+    - build-backend
+    - build-gateway
+    - build-services
+
+
     if: always()
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check all builds succeeded or were skipped
+      - name: Check all jobs succeeded or skipped
         run: |
           results=(
+            "${{ needs.tests.result }}"
+            "${{ needs.coverage.result }}"
+            "${{ needs.lint.result }}"
+            "${{ needs.hadolint.result }}"
+            "${{ needs.trivy.result }}"
+            "${{ needs.sonar.result }}"
             "${{ needs.build-frontend.result }}"
             "${{ needs.build-backend.result }}"
             "${{ needs.build-gateway.result }}"
             "${{ needs.build-services.result }}"
           )
+
           for result in "${results[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
-              echo "❌ Build job failed with status: $result"
+              echo "❌ CI failed: $result"
               exit 1
             fi
           done
-          echo "✅ All builds passed or were skipped"
 
-  # PAT + numéro de PR explicite
+          echo "✅ All CI checks passed or skipped"
+
+
   auto-merge:
-      needs: ci-gate
-      if: always()
-      runs-on: ubuntu-latest
-      permissions:
-        contents: write
-        pull-requests: write
-      steps:
-        - name: Enable auto-merge
-          if: needs.ci-gate.result == 'success'
-          uses: peter-evans/enable-pull-request-automerge@v3
-          with:
-            token: ${{ secrets.PAT_TOKEN }}
-            merge-method: squash
-            pull-request-number: ${{ github.event.pull_request.number }}
+    needs: ci-gate
+    if: always()
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Enable auto-merge
+        if: needs.ci-gate.result == 'success'
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          merge-method: squash
+          pull-request-number: ${{ github.event.pull_request.number }}
