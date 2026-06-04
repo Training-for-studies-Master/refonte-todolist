@@ -36,23 +36,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
       - name: Start full stack (Docker Compose)
         run: docker compose up -d --build
 
-      - name: Wait for containers to warm up
+      - name: Wait for services
         run: sleep 25
 
-      - name: Wait for gateway (TCP)
-        run: npx wait-on tcp:3000 --timeout 120000
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
 
-      - name: Wait for frontend
-        run: npx wait-on tcp:5173 --timeout 120000
-
-      - name: Seed test user
-        run: |
-          curl -X POST http://localhost:3000/auth/register \
-            -H "Content-Type: application/json" \
-            -d '{"username":"test","password":"test"}' || true
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps
 
       - name: Run Playwright tests
         working-directory: frontend
