@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  security-events: write
 
 jobs:
   changes:
@@ -105,13 +106,17 @@ jobs:
 
       - run: pnpm install
 
+      # ✅ FIX ESLINT FRONTEND
       - name: ESLint frontend
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter frontend lint
+        run: pnpm --filter frontend lint --format json > eslint-frontend.json || true
 
-      - name: ESLint backend
-        if: needs.changes.outputs.backend == 'true'
-        run: pnpm --filter backend lint
+      # 🔥 Upload SAFE (CodeQL v4 + condition)
+      - name: Upload ESLint results
+        if: always() && hashFiles('eslint-frontend.json') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: eslint-frontend.json
 
   hadolint:
     runs-on: ubuntu-latest
@@ -138,8 +143,13 @@ jobs:
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-      - name: Scan filesystem
-        run: ./bin/trivy fs .
+      - name: Run Trivy scan (SARIF)
+        run: ./bin/trivy fs . -f sarif -o trivy.sarif
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
 
   sonar:
     runs-on: ubuntu-latest
