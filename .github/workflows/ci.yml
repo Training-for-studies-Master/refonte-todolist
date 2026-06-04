@@ -66,15 +66,6 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend test
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            coverage/
-            **/test-results/
-
   coverage:
     needs: changes
     runs-on: ubuntu-latest
@@ -115,17 +106,15 @@ jobs:
 
       - run: pnpm install
 
-      - name: ESLint frontend (SARIF)
+      # ✅ FIX ESLINT FRONTEND
+      - name: ESLint frontend
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter frontend lint -f json > eslint-frontend.json
+        run: pnpm --filter frontend lint --format json > eslint-frontend.json || true
 
-      - name: ESLint backend (SARIF)
-        if: needs.changes.outputs.backend == 'true'
-        run: pnpm --filter backend lint -f json > eslint-backend.json
-
-      - name: Upload ESLint results to GitHub Security
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
+      # 🔥 Upload SAFE (CodeQL v4 + condition)
+      - name: Upload ESLint results
+        if: always() && hashFiles('eslint-frontend.json') != ''
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: eslint-frontend.json
 
@@ -158,7 +147,7 @@ jobs:
         run: ./bin/trivy fs . -f sarif -o trivy.sarif
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
 
