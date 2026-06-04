@@ -9,6 +9,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  security-events: write
 
 jobs:
   changes:
@@ -65,6 +66,15 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend test
 
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            coverage/
+            **/test-results/
+
   coverage:
     needs: changes
     runs-on: ubuntu-latest
@@ -105,13 +115,19 @@ jobs:
 
       - run: pnpm install
 
-      - name: ESLint frontend
+      - name: ESLint frontend (SARIF)
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter frontend lint
+        run: pnpm --filter frontend lint -f json > eslint-frontend.json
 
-      - name: ESLint backend
+      - name: ESLint backend (SARIF)
         if: needs.changes.outputs.backend == 'true'
-        run: pnpm --filter backend lint
+        run: pnpm --filter backend lint -f json > eslint-backend.json
+
+      - name: Upload ESLint results to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: eslint-frontend.json
 
   hadolint:
     runs-on: ubuntu-latest
@@ -138,8 +154,13 @@ jobs:
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-      - name: Scan filesystem
-        run: ./bin/trivy fs .
+      - name: Run Trivy scan (SARIF)
+        run: ./bin/trivy fs . -f sarif -o trivy.sarif
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
 
   sonar:
     runs-on: ubuntu-latest
