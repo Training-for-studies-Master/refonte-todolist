@@ -50,8 +50,7 @@ jobs:
       - name: Wait for services
         run: sleep 25
 
-      - name: Install frontend dependencies
-        working-directory: frontend
+      - name: Install dependencies (workspace root)
         run: pnpm install --frozen-lockfile
 
       - name: Install Playwright browsers
