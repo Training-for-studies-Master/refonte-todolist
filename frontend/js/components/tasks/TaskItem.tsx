@@ -51,7 +51,7 @@ export function TaskItem({ task, projectClosed, onChanged }: Props) {
           </Button>
         </Col>
 
-        <Col xs={9} className="name">
+        <Col xs={9} className="name task-name">
           {task.name} ({task.status})
         </Col>
 

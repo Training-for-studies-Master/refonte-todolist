@@ -1,5 +1,5 @@
 packages:
-  - frontend
-  - backend
-  - gateway
-  - services/*
+  - "frontend"
+  - "backend"
+  - "gateway"
+  - "services/*"

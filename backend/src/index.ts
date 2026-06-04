@@ -41,7 +41,7 @@ function authMiddleware(req: any, res: any, next: any) {
   }
   next();
 }
-
+// test de pipeline ci
 async function startServer() {
   try {
     // Création et initialisation du repository selon l'environnement
