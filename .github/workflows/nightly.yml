@@ -29,32 +29,35 @@ jobs:
         run: pnpm test:integration
 
 
-  e2e-tests:
-    runs-on: ubuntu-latest
+e2e-tests:
+  runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Start full stack (Docker Compose)
-        run: docker compose up -d --build
+    - name: Start full stack (Docker Compose)
+      run: docker compose up -d --build
 
-      - name: Wait for gateway
-        run: npx wait-on http://localhost:3000
+    - name: Wait for containers to warm up
+      run: sleep 25
 
-      - name: Wait for frontend
-        run: npx wait-on http://localhost:5173
+    - name: Wait for gateway (TCP)
+      run: npx wait-on tcp:3000 --timeout 120000
 
-      - name: Seed test user
-        run: |
-          curl -X POST http://localhost:3000/auth/register \
-            -H "Content-Type: application/json" \
-            -d '{"username":"test","password":"test"}' || true
+    - name: Wait for frontend
+      run: npx wait-on tcp:5173 --timeout 120000
 
-      - name: Run Playwright tests
-        working-directory: frontend
-        run: npx playwright test
+    - name: Seed test user
+      run: |
+        curl -X POST http://localhost:3000/auth/register \
+          -H "Content-Type: application/json" \
+          -d '{"username":"test","password":"test"}' || true
 
-      - name: Stop stack
-        if: always()
-        run: docker compose down -v
+    - name: Run Playwright tests
+      working-directory: frontend
+      run: npx playwright test
+
+    - name: Stop stack
+      if: always()
+      run: docker compose down -v
