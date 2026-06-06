@@ -129,16 +129,12 @@ jobs:
 
       - run: pnpm install
 
-      # =========================
-      # AJOUT LINT -> JSON (SECURITY)
-      # =========================
+      # ✅ FIX ESLINT FRONTEND
       - name: ESLint frontend
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend lint --format json > eslint-frontend.json || true
 
-      # =========================
-      # UPLOAD GITHUB SECURITY (ESLINT)
-      # =========================
+      # 🔥 Upload SAFE (CodeQL v4 + condition)
       - name: Upload ESLint results
         if: always() && hashFiles('eslint-frontend.json') != ''
         uses: github/codeql-action/upload-sarif@v4
