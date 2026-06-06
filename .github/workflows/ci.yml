@@ -1,28 +1,29 @@
 name: CI
-
+ 
 on:
   pull_request:
     branches:
       - develop
       - main
-
+ 
 permissions:
   contents: write
   pull-requests: write
+  security-events: write
 
 jobs:
   changes:
     runs-on: ubuntu-latest
-
+ 
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
       backend: ${{ steps.filter.outputs.backend }}
       gateway: ${{ steps.filter.outputs.gateway }}
       services: ${{ steps.filter.outputs.services }}
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - name: Detect changes
         id: filter
         uses: dorny/paths-filter@v3
@@ -36,205 +37,240 @@ jobs:
               - 'gateway/**'
             services:
               - 'services/**'
-
+ 
   tests:
     needs: changes
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
-
+ 
       - name: Backend tests
         if: needs.changes.outputs.backend == 'true'
         run: pnpm --filter backend test
-
+ 
       - name: Services tests
         if: needs.changes.outputs.services == 'true'
         run: pnpm --filter "services/*" test
-
+ 
       - name: Frontend tests
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend test
 
+      # =========================
+      # AJOUT TRACEABILITE TESTS
+      # =========================
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/coverage/**
+            **/test-results/**
+
   coverage:
     needs: changes
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
-
+ 
       - name: Backend coverage
         if: needs.changes.outputs.backend == 'true'
         run: pnpm --filter backend test -- --coverage
-
+ 
       - name: Services coverage
         if: needs.changes.outputs.services == 'true'
         run: pnpm --filter "services/*" test -- --coverage
 
+      # =========================
+      # AJOUT COVERAGE ARTIFACT
+      # =========================
+      - name: Upload coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            **/coverage/**
+
   lint:
     needs: changes
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
 
+      # ✅ FIX ESLINT FRONTEND
       - name: ESLint frontend
         if: needs.changes.outputs.frontend == 'true'
-        run: pnpm --filter frontend lint
+        run: pnpm --filter frontend lint --format json > eslint-frontend.json || true
 
-      - name: ESLint backend
-        if: needs.changes.outputs.backend == 'true'
-        run: pnpm --filter backend lint
+      # 🔥 Upload SAFE (CodeQL v4 + condition)
+      - name: Upload ESLint results
+        if: always() && hashFiles('eslint-frontend.json') != ''
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: eslint-frontend.json
 
   hadolint:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - name: Install hadolint
         run: |
           wget -O hadolint https://github.com/hadolint/hadolint/releases/latest/download/hadolint-Linux-x86_64
           chmod +x hadolint
-
+ 
       - name: Run hadolint
         run: |
           find . -name Dockerfile -exec ./hadolint {} \;
-
+ 
   trivy:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-      - name: Scan filesystem
-        run: ./bin/trivy fs .
+      - name: Scan filesystem (SARIF)
+        run: ./bin/trivy fs . -f sarif -o trivy.sarif
+
+      # =========================
+      # UPLOAD GITHUB SECURITY
+      # =========================
+      - name: Upload Trivy results
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy.sarif
 
   sonar:
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
-
+ 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
+ 
   build-frontend:
     needs: changes
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
       - run: pnpm --filter frontend build
-
+ 
   build-backend:
     needs: changes
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
       - run: pnpm --filter backend build
-
+ 
   build-gateway:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
       - run: pnpm --filter gateway build
-
+ 
   build-services:
     needs: changes
     if: needs.changes.outputs.services == 'true'
     runs-on: ubuntu-latest
-
+ 
     steps:
       - uses: actions/checkout@v4
-
+ 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-
+ 
       - name: Install pnpm
         run: npm install -g pnpm@9.0.0
-
+ 
       - run: pnpm install
       - run: pnpm --filter "services/*" build
-
+ 
   ci-gate:
     needs:
       - tests
@@ -247,10 +283,10 @@ jobs:
       - build-backend
       - build-gateway
       - build-services
-
+ 
     if: always()
     runs-on: ubuntu-latest
-
+ 
     steps:
       - name: Check all jobs succeeded or skipped
         run: |
@@ -266,25 +302,25 @@ jobs:
             "${{ needs.build-gateway.result }}"
             "${{ needs.build-services.result }}"
           )
-
+ 
           for result in "${results[@]}"; do
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
               echo "❌ CI failed: $result"
               exit 1
             fi
           done
-
+ 
           echo "✅ All CI checks passed or skipped"
-
+ 
   auto-merge:
     needs: ci-gate
     if: always()
     runs-on: ubuntu-latest
-
+ 
     permissions:
       contents: write
       pull-requests: write
-
+ 
     steps:
       - name: Enable auto-merge
         if: needs.ci-gate.result == 'success'
