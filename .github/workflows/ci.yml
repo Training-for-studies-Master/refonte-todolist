@@ -66,6 +66,18 @@ jobs:
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend test
 
+      # =========================
+      # AJOUT TRACEABILITE TESTS
+      # =========================
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/coverage/**
+            **/test-results/**
+
   coverage:
     needs: changes
     runs-on: ubuntu-latest
@@ -90,6 +102,17 @@ jobs:
         if: needs.changes.outputs.services == 'true'
         run: pnpm --filter "services/*" test -- --coverage
 
+      # =========================
+      # AJOUT COVERAGE ARTIFACT
+      # =========================
+      - name: Upload coverage results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            **/coverage/**
+
   lint:
     needs: changes
     runs-on: ubuntu-latest
@@ -106,12 +129,16 @@ jobs:
 
       - run: pnpm install
 
-      # ✅ FIX ESLINT FRONTEND
+      # =========================
+      # AJOUT LINT -> JSON (SECURITY)
+      # =========================
       - name: ESLint frontend
         if: needs.changes.outputs.frontend == 'true'
         run: pnpm --filter frontend lint --format json > eslint-frontend.json || true
 
-      # 🔥 Upload SAFE (CodeQL v4 + condition)
+      # =========================
+      # UPLOAD GITHUB SECURITY (ESLINT)
+      # =========================
       - name: Upload ESLint results
         if: always() && hashFiles('eslint-frontend.json') != ''
         uses: github/codeql-action/upload-sarif@v4
@@ -143,10 +170,13 @@ jobs:
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
 
-      - name: Run Trivy scan (SARIF)
+      - name: Scan filesystem (SARIF)
         run: ./bin/trivy fs . -f sarif -o trivy.sarif
 
-      - name: Upload Trivy results to GitHub Security
+      # =========================
+      # UPLOAD GITHUB SECURITY
+      # =========================
+      - name: Upload Trivy results
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: trivy.sarif
