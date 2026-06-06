@@ -10,7 +10,7 @@ feature/* : développement des fonctionnalités
 develop : environnement de recette et d'intégration
 main : environnement de production
 
-Les intégrations depuis une branche feature/* vers develop sont réalisées via Pull Request avec validation manuelle.
+Les intégrations depuis une branche feature/* vers develop sont réalisées via Pull Request avec une validation et merge automatique dans le cas ou tous les tests passent.
 La branche main ne reçoit que du code préalablement validé sur develop.
 L'analyse serait enclenché de develop à main
 
@@ -21,4 +21,3 @@ Positive :
 - Limitation de l'exécution des pipelines lourds aux étapes importantes
 Négative : 
 - Gestion supplémentaire des branches
-- Pas de vérification automatique des branches feature à develop
