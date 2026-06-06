@@ -21,4 +21,3 @@ Positive :
 - Limitation de l'exécution des pipelines lourds aux étapes importantes
 Négative : 
 - Gestion supplémentaire des branches
-- Pas de vérification automatique des branches feature à develop
