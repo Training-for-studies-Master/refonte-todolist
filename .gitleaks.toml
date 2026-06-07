@@ -1,0 +1,8 @@
+title = "Gitleaks config"
+
+[extend]
+useDefault = true
+
+[[allowlist.paths]]
+description = "README ignoré - identifiants requis pour l'accès à l'enseignant"
+paths = ["README.md"]
