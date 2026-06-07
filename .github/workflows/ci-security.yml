@@ -42,7 +42,7 @@ jobs:
           chmod +x gitleaks
 
       - name: Run Gitleaks
-        run: ./gitleaks detect --source . --no-git
+        run: ./gitleaks detect --source . --no-git --verbose
 
       - name: Install license checker
         run: npm install -g license-checker
