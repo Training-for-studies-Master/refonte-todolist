@@ -34,15 +34,10 @@ jobs:
         run: docker compose config
 
 
-      - name: Install Gitleaks
-        run: |
-          wget -q https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
-          tar -xzf gitleaks-linux-amd64.tar.gz
-          chmod +x gitleaks
-
       - name: Run Gitleaks
-        run: ./gitleaks detect --source . --no-git
-
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install license checker
         run: npm install -g license-checker
