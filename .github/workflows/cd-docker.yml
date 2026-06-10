@@ -5,25 +5,56 @@ on:
     branches: [main]
 
 jobs:
-  docker-apps:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      services: ${{ steps.filter.outputs.services }}
 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            gateway:
+              - 'gateway/**'
+            services:
+              - 'services/**'
+
+  docker-apps:
+    needs: changes
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     strategy:
       matrix:
-        platform: [linux/amd64]
         include:
           - name: backend
             file: ./backend/Dockerfile
+            changed: ${{ needs.changes.outputs.backend }}
 
           - name: frontend
             file: ./frontend/Dockerfile
+            changed: ${{ needs.changes.outputs.frontend }}
 
           - name: gateway
             file: ./gateway/Dockerfile
+            changed: ${{ needs.changes.outputs.gateway }}
+
+    if: needs.changes.outputs.backend == 'true' ||
+        needs.changes.outputs.frontend == 'true' ||
+        needs.changes.outputs.gateway == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -42,33 +73,44 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & Push ${{ matrix.name }}
+        if: matrix.changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ${{ matrix.file }}
           push: true
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ github.sha }}
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:latest
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:${{ github.sha }}
 
   docker-services:
+    needs: changes
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
 
     strategy:
       matrix:
-        platform: [linux/amd64]
-        service:
-          - auth
-          - notifications
-          - projects
-          - tasks
+        include:
+          - service: auth
+            changed: ${{ needs.changes.outputs.services }}
+
+          - service: notifications
+            changed: ${{ needs.changes.outputs.services }}
+
+          - service: projects
+            changed: ${{ needs.changes.outputs.services }}
+
+          - service: tasks
+            changed: ${{ needs.changes.outputs.services }}
+
+    if: needs.changes.outputs.services == 'true'
 
     steps:
       - uses: actions/checkout@v4
@@ -86,15 +128,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & Push service ${{ matrix.service }}
+      - name: Build & Push ${{ matrix.service }}
+        if: matrix.changed == 'true'
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./services/${{ matrix.service }}/Dockerfile
           push: true
-          platforms: ${{ matrix.platform }}
+          platforms: linux/amd64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            VERSION=${{ github.sha }}
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:latest
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ github.sha }}
