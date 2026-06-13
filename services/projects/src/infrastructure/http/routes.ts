@@ -10,8 +10,9 @@ function toMysqlDatetime(date: Date): string {
 export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher) {
   const r = express.Router();
   const getUserId = (req: express.Request) => req.header("X-User-Id") || "";
+  const API_VERSION = "/v1";
 
-  r.get("/projects", async (req, res) => {
+  r.get(`${API_VERSION}/projects`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -19,7 +20,7 @@ export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher
     res.json(projects);
   });
 
-  r.post("/projects", async (req, res) => {
+  r.post(`${API_VERSION}/projects`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -47,7 +48,7 @@ export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher
     res.json(project);
   });
 
-  r.patch("/projects/:id", async (req, res) => {
+  r.patch(`${API_VERSION}/projects/:id`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -73,7 +74,7 @@ export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher
     res.json(updated);
   });
 
-  r.post("/projects/:id/close", async (req, res) => {
+  r.post(`${API_VERSION}/projects/:id/close`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -99,7 +100,7 @@ export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher
     res.json(updated);
   });
 
-  r.delete("/projects/:id", async (req, res) => {
+  r.delete(`${API_VERSION}/projects/:id`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
