@@ -1,5 +1,7 @@
 import express from "express";
 import session from "express-session";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
 import cors from "cors";
 
 declare module "express-session" {
@@ -151,5 +153,24 @@ app.post(`${API_VERSION}/tasks/:id/reopen`, requireAuth, async (req, res) => {
 
   res.status(r.status).json(await r.json());
 });
+
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "TodoList API Gateway",
+      version: "1.0.0",
+      description: "API versionnée v1 via Gateway",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
+      },
+    ],
+  },
+  apis: [], // simple version (pas besoin d'annotations pour ton projet)
+});
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 export default app;
