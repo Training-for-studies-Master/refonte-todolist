@@ -3,12 +3,12 @@ const manifest = require("../compatibility-manifest.json");
 
 // 👉 liste de tes images (adapte si besoin)
 const images = {
-  auth: "ghcr.io/training-for-studies-master/auth:latest",
-  tasks: "ghcr.io/training-for-studies-master/tasks:latest",
-  gateway: "ghcr.io/training-for-studies-master/gateway:latest",
-  notifications: "ghcr.io/training-for-studies-master/notifications:latest",
-  frontend: "ghcr.io/training-for-studies-master/frontend:latest",
-  projects: "ghcr.io/training-for-studies-master/projects:latest",
+  auth: "ghcr.io/Training-for-studies-Master/auth:latest",
+  tasks: "ghcr.io/Training-for-studies-Master/tasks:latest",
+  gateway: "ghcr.io/Training-for-studies-Master/gateway:latest",
+  notifications: "ghcr.io/Training-for-studies-Master/notifications:latest",
+  frontend: "ghcr.io/Training-for-studies-Master/frontend:latest",
+  projects: "ghcr.io/Training-for-studies-Master/projects:latest",
 };
 
 // ----------------------------
@@ -17,13 +17,14 @@ const images = {
 function getDockerLabels(image) {
   try {
     const output = execSync(
-      `docker inspect ${image} --format '{{ json .Config.Labels }}'`
+      `docker inspect ${image} --format '{{ json .Config.Labels }}'`,
+      { stdio: ['pipe', 'pipe', 'inherit'] }
     ).toString();
 
-    return JSON.parse(output);
+    return JSON.parse(output) || {};
   } catch (err) {
-    console.error(`❌ Failed to inspect image: ${image}`);
-    throw err;
+    console.error(`❌ Erreur critique lors de l'inspect de l'image : ${image}`);
+    process.exit(1);
   }
 }
 
