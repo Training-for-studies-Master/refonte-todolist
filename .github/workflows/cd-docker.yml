@@ -219,6 +219,7 @@ jobs:
           docker pull ghcr.io/${OWNER_LC}/tasks:latest
           docker pull ghcr.io/${OWNER_LC}/gateway:latest
           docker pull ghcr.io/${OWNER_LC}/notifications:latest
+          docker pull ghcr.io/${OWNER_LC}/projects:latest
 
       - name: Run compatibility check
         run: node scripts/check-compatibility.js
