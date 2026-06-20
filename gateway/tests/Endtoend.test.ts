@@ -6,7 +6,7 @@ import app from "../src/app";
 
 const agent = request.agent(app);
 const API_VERSION = "/v1";
-
+// Test manifest de compatibilité
 // Création projet
 test("POST /projects persists project in DB", async () => {
   const login = await agent
