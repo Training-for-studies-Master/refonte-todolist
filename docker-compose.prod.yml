@@ -1,0 +1,19 @@
+services:  
+  auth-migrations:
+      restart: "no"
+      build:
+        context: .
+        dockerfile: services/auth/Dockerfile
+      command: pnpm --filter auth run migrate
+      environment:
+        MYSQL_HOST: mysql
+        MYSQL_USER: root
+        MYSQL_PASSWORD: root
+        MYSQL_DB: auth_db
+      depends_on:
+        - mysql
+  auth:
+    command: pnpm --filter auth start
+    depends_on:
+    - auth-migrations
+  
