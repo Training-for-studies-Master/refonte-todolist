@@ -6,7 +6,7 @@ async function main() {
   await repo.init();
   startAuthServer(repo, Number(process.env.PORT || 3001));
 }
-
+// Test compatiblity
 main().catch((e) => {
   console.error(e);
   process.exit(1);
