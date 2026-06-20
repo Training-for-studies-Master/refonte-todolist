@@ -3,11 +3,11 @@ const manifest = require("../compatibility-manifest.json");
 
 // 👉 liste de tes images (adapte si besoin)
 const images = {
-  auth: "ghcr.io/your-org/auth:latest",
-  tasks: "ghcr.io/your-org/tasks:latest",
-  gateway: "ghcr.io/your-org/gateway:latest",
-  notifications: "ghcr.io/your-org/notifications:latest",
-  frontend: "ghcr.io/your-org/frontend:latest",
+  auth: "ghcr.io/training-for-studies-master/auth:latest",
+  tasks: "ghcr.io/training-for-studies-master/tasks:latest",
+  gateway: "ghcr.io/training-for-studies-master/gateway:latest",
+  notifications: "ghcr.io/training-for-studies-master/notifications:latest",
+  frontend: "ghcr.io/training-for-studies-master/frontend:latest",
 };
 
 // ----------------------------
