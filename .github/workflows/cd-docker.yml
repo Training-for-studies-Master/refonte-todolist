@@ -223,4 +223,6 @@ jobs:
           docker pull ghcr.io/${OWNER_LC}/frontend:latest
 
       - name: Run compatibility check
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }}
         run: node scripts/check-compatibility.js

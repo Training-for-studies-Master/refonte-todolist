@@ -1,14 +1,16 @@
 const { execSync } = require("child_process");
 const manifest = require("../compatibility-manifest.json");
 
+const owner = (process.env.OWNER_LC || "Training-for-studies-Master").toLowerCase();
+
 // 👉 liste de tes images (adapte si besoin)
 const images = {
-  auth: "ghcr.io/Training-for-studies-Master/auth:latest",
-  tasks: "ghcr.io/Training-for-studies-Master/tasks:latest",
-  gateway: "ghcr.io/Training-for-studies-Master/gateway:latest",
-  notifications: "ghcr.io/Training-for-studies-Master/notifications:latest",
-  frontend: "ghcr.io/Training-for-studies-Master/frontend:latest",
-  projects: "ghcr.io/Training-for-studies-Master/projects:latest",
+  auth: `ghcr.io/${owner}/auth:latest`,
+  tasks: `ghcr.io/${owner}/tasks:latest`,
+  gateway: `ghcr.io/${owner}/gateway:latest`,
+  notifications: `ghcr.io/${owner}/notifications:latest`,
+  frontend: `ghcr.io/${owner}/frontend:latest`,
+  projects: `ghcr.io/${owner}/projects:latest`,
 };
 
 // ----------------------------
