@@ -13,7 +13,7 @@
     "test:integration": "jest tests/integration",
     "build": "pnpm -r build",
     "seed:test": "node scripts/seed-test-user.js",
-    "check:compatibility": "ts-node scripts/check-compatibility.ts"
+    "check:compatibility": "ts-node scripts/check-compatibility.js"
   },
   "keywords": [],
   "author": "",
