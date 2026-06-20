@@ -17,7 +17,7 @@ const images = {
 function getDockerLabels(image) {
   try {
     const output = execSync(
-      `docker inspect ${image} --format "{"json .Config.Labels"}"`
+      `docker inspect ${image} --format '{{ json .Config.Labels }}'`
     ).toString();
 
     return JSON.parse(output);
