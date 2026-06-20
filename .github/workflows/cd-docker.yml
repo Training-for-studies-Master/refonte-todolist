@@ -188,3 +188,25 @@ jobs:
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.major }}
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.minor }}
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.specific }}
+
+  compatibility-check:
+    needs: [docker-apps, docker-services]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Pull images
+        run: |
+          docker pull ghcr.io/${{ github.repository_owner }}/auth:latest
+          docker pull ghcr.io/${{ github.repository_owner }}/tasks:latest
+          docker pull ghcr.io/${{ github.repository_owner }}/gateway:latest
+          docker pull ghcr.io/${{ github.repository_owner }}/notifications:latest
+
+      - name: Run compatibility check
+        run: node scripts/check-compatibility.js

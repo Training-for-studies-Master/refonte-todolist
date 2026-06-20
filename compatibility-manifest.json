@@ -1,0 +1,54 @@
+{
+  "auth": {
+    "provides": "v1",
+    "requires": {
+      "tasks": ">=1.0.0 <=2.0.0",
+      "gateway": ">=1.0.0 <=2.0.0",
+      "notifications": ">=1.0.0 <=2.0.0",
+      "projects": ">=1.0.0 <=2.0.0"
+    }
+  },
+  "tasks": {
+    "provides": "v1",
+    "requires": {
+      "auth": ">=1.0.0 <=2.0.0",
+      "gateway": ">=1.0.0 <=2.0.0",
+      "notifications": ">=1.0.0 <=2.0.0",
+      "projects": ">=1.0.0 <=2.0.0"
+    }
+  },
+  "gateway": {
+    "provides": "v1",
+    "requires": {
+      "auth": ">=1.0.0 <=2.0.0",
+      "tasks": ">=1.0.0 <=2.0.0",
+      "notifications": ">=1.0.0 <=2.0.0",
+      "projects": ">=1.0.0 <=2.0.0",
+      "frontend": ">=1.0.0 <=2.0.0"
+    }
+  },
+  "notifications": {
+    "provides": "v1",
+    "requires": {
+      "auth": ">=1.0.0 <=2.0.0",
+      "tasks": ">=1.0.0 <=2.0.0",
+      "gateway": ">=1.0.0 <=2.0.0",
+      "projects": ">=1.0.0 <=2.0.0"
+    }
+  },
+  "projects": {
+    "provides": "v1",
+    "requires": {
+      "auth": ">=1.0.0 <=2.0.0",
+      "tasks": ">=1.0.0 <=2.0.0",
+      "gateway": ">=1.0.0 <=2.0.0",
+      "notifications": ">=1.0.0 <=2.0.0"
+    }
+  },
+  "frontend": {
+    "provides": "v1",
+    "requires": {
+      "gateway": ">=1.0.0 <=2.0.0"
+    }
+  }
+}

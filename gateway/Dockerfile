@@ -1,5 +1,13 @@
 FROM node:20-alpine
 
+LABEL provides.api-version="v1"
+LABEL service.name="gateway"
+LABEL requires.auth=">=1.0.0 <=2.0.0"
+LABEL requires.projects=">=1.0.0 <=2.0.0"
+LABEL requires.notifications=">=1.0.0 <=2.0.0"
+LABEL requires.frontend=">=1.0.0 <=2.0.0"
+LABEL requires.tasks=">=1.0.0 <=2.0.0"
+
 WORKDIR /app
 
 RUN corepack enable

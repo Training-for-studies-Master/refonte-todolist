@@ -1,5 +1,13 @@
 FROM node:22-alpine
 
+LABEL provides.api-version="v1"
+LABEL service.name="frontend"
+LABEL requires.auth=">=1.0.0 <=2.0.0"
+LABEL requires.projects=">=1.0.0 <=2.0.0"
+LABEL requires.notifications=">=1.0.0 <=2.0.0"
+LABEL requires.tasks=">=1.0.0 <=2.0.0"
+LABEL requires.gateway=">=1.0.0 <=2.0.0"
+
 WORKDIR /app
 
 ENV CI=true
