@@ -2,6 +2,7 @@ FROM node:20-alpine
 
 LABEL provides.api-version="v1"
 LABEL service.name="auth"
+LABEL service.version="2.0.0"
 LABEL requires.tasks=">=1.2.0 <=2.0.0"
 LABEL requires.projects=">=1.2.0 <=2.0.0"
 LABEL requires.notifications=">=1.2.0 <=2.0.0"
