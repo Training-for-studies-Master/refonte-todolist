@@ -203,10 +203,10 @@ jobs:
 
       - name: Pull images
         run: |
-          docker pull ghcr.io/${{ github.repository_owner }}/auth:latest
-          docker pull ghcr.io/${{ github.repository_owner }}/tasks:latest
-          docker pull ghcr.io/${{ github.repository_owner }}/gateway:latest
-          docker pull ghcr.io/${{ github.repository_owner }}/notifications:latest
+          docker pull ghcr.io/${OWNER_LC}/auth:latest
+          docker pull ghcr.io/${OWNER_LC}/tasks:latest
+          docker pull ghcr.io/${OWNER_LC}/gateway:latest
+          docker pull ghcr.io/${OWNER_LC}/notifications:latest
 
       - name: Run compatibility check
         run: node scripts/check-compatibility.js
