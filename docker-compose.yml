@@ -16,6 +16,9 @@ services:
       - "15672:15672"
 
   auth:
+    restart: "no"
+    working_dir: /app
+    command: sh -c "pnpm --filter auth run migrate && pnpm --filter auth start"
     build:
       context: .
       dockerfile: services/auth/Dockerfile
@@ -29,6 +32,8 @@ services:
       - mysql
     ports:
       - "3001:3001"
+
+  
 
   tasks:
     build:

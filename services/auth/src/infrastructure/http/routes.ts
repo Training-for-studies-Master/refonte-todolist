@@ -5,8 +5,9 @@ import type { AuthRepository } from "../../domain/AuthRepository";
 
 export function buildAuthRoutes(repo: AuthRepository) {
   const r = express.Router();
+  const API_VERSION = "/v1";
 
-  r.post("/register", async (req, res) => {
+  r.post(`${API_VERSION}/register`, async (req, res) => {
     const { username, password } = req.body ?? {};
     if (!username || !password) return res.status(400).json({ error: "Missing fields" });
 
@@ -21,7 +22,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
     res.json({ userId });
   });
 
-  r.post("/login", async (req, res) => {
+  r.post(`${API_VERSION}/login`, async (req, res) => {
     const { username, password } = req.body ?? {};
     if (!username || !password) return res.status(400).json({ error: "Missing fields" });
 
@@ -34,7 +35,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
     res.json({ userId: user.id });
   });
 
-  r.get("/me", async (req, res) => {
+  r.get(`${API_VERSION}/me`, async (req, res) => {
     const userId = req.header("X-User-Id");
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 

@@ -44,8 +44,9 @@ export function buildCreateTaskHandler(repo: TaskRepository, bus: RabbitPublishe
 export function buildTaskRoutes(repo: TaskRepository, bus: RabbitPublisher) {
   const r = express.Router();
   const getUserId = (req: express.Request) => req.header("X-User-Id") || "";
+  const API_VERSION = "/v1";
 
-  r.get("/tasks", async (req, res) => {
+  r.get(`${API_VERSION}/tasks`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -53,9 +54,9 @@ export function buildTaskRoutes(repo: TaskRepository, bus: RabbitPublisher) {
     res.json(tasks);
   });
 
-  r.post("/tasks", buildCreateTaskHandler(repo, bus));
+  r.post(`${API_VERSION}/tasks`, buildCreateTaskHandler(repo, bus));
 
-  r.post("/tasks/:id/close", async (req, res) => {
+  r.post(`${API_VERSION}/tasks/:id/close`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -83,7 +84,7 @@ export function buildTaskRoutes(repo: TaskRepository, bus: RabbitPublisher) {
     res.json(t);
   });
 
-  r.post("/tasks/:id/reopen", async (req, res) => {
+  r.post(`${API_VERSION}/tasks/:id/reopen`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -122,7 +123,7 @@ export function buildTaskRoutes(repo: TaskRepository, bus: RabbitPublisher) {
     res.json(t);
   });
 
-  r.delete("/tasks/:id", async (req, res) => {
+  r.delete(`${API_VERSION}/tasks/:id`, async (req, res) => {
     const userId = getUserId(req);
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 

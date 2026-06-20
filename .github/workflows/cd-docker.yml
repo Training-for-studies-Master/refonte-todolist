@@ -2,7 +2,7 @@ name: Build and Publish Docker Images
 
 on:
   push:
-    branches: [main]
+    branches: [main] 
 
 jobs:
   changes:
@@ -42,14 +42,17 @@ jobs:
         include:
           - name: backend
             file: ./backend/Dockerfile
+            package: ./backend/package.json
             changed: ${{ needs.changes.outputs.backend }}
 
           - name: frontend
             file: ./frontend/Dockerfile
+            package: ./frontend/package.json
             changed: ${{ needs.changes.outputs.frontend }}
 
           - name: gateway
             file: ./gateway/Dockerfile
+            package: ./gateway/package.json
             changed: ${{ needs.changes.outputs.gateway }}
 
     if: needs.changes.outputs.backend == 'true' ||
@@ -72,6 +75,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract semantic version
+        if: matrix.changed == 'true'
+        id: semver
+        run: |
+          VERSION=$(node -p "require('${{ matrix.package }}').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MAJOR.$MINOR" >> $GITHUB_OUTPUT
+          echo "specific=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
+
+          echo "Version détectée : $VERSION"
+          echo "Major : $MAJOR"
+          echo "Minor : $MAJOR.$MINOR"
+          echo "Specific : $MAJOR.$MINOR.$PATCH"
+
       - name: Build & Push ${{ matrix.name }}
         if: matrix.changed == 'true'
         uses: docker/build-push-action@v5
@@ -87,6 +106,9 @@ jobs:
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:latest
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:${{ steps.semver.outputs.major }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:${{ steps.semver.outputs.minor }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.name }}:${{ steps.semver.outputs.specific }}
 
   docker-services:
     needs: changes
@@ -99,15 +121,19 @@ jobs:
       matrix:
         include:
           - service: auth
+            package: ./services/auth/package.json
             changed: ${{ needs.changes.outputs.services }}
 
           - service: notifications
+            package: ./services/notifications/package.json
             changed: ${{ needs.changes.outputs.services }}
 
           - service: projects
+            package: ./services/projects/package.json
             changed: ${{ needs.changes.outputs.services }}
 
           - service: tasks
+            package: ./services/tasks/package.json
             changed: ${{ needs.changes.outputs.services }}
 
     if: needs.changes.outputs.services == 'true'
@@ -128,6 +154,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract semantic version
+        if: matrix.changed == 'true'
+        id: semver
+        run: |
+          VERSION=$(node -p "require('${{ matrix.package }}').version")
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          echo "major=$MAJOR" >> $GITHUB_OUTPUT
+          echo "minor=$MAJOR.$MINOR" >> $GITHUB_OUTPUT
+          echo "specific=$MAJOR.$MINOR.$PATCH" >> $GITHUB_OUTPUT
+
+          echo "Version détectée : $VERSION"
+          echo "Major : $MAJOR"
+          echo "Minor : $MAJOR.$MINOR"
+          echo "Specific : $MAJOR.$MINOR.$PATCH"
+
       - name: Build & Push ${{ matrix.service }}
         if: matrix.changed == 'true'
         uses: docker/build-push-action@v5
@@ -143,3 +185,6 @@ jobs:
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:latest
             ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.major }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.minor }}
+            ghcr.io/${{ env.OWNER_LC }}/${{ matrix.service }}:${{ steps.semver.outputs.specific }}

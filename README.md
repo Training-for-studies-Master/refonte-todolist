@@ -156,3 +156,17 @@ Les décisions d’architecture sont documentées dans le dossier `/adr`.
 - ADR-006 : Choix du nombre de base de données
 - ADR-007 : Choix du langage backend
 - ADR-008 : Choix de réimplémenter Sqlite 
+
+# 🚀 Migration de la database 
+Dans un fichier .env placé dans le service auth, mettez ces variables avec leurs valeurs : 
+MYSQL_HOST=
+MYSQL_USER=
+MYSQL_PASSWORD=
+MYSQL_DB=
+RUN_MIGRATION="false"
+Puis lancez "docker compose up" 
+Pour la production il faudra lancer : 
+   docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.prod.yml \
+  up
