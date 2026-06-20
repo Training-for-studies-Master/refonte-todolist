@@ -7,6 +7,7 @@ LABEL requires.projects=">=1.0.0 <=2.0.0"
 LABEL requires.notifications=">=1.0.0 <=2.0.0"
 LABEL requires.tasks=">=1.0.0 <=2.0.0"
 LABEL requires.gateway=">=1.0.0 <=2.0.0"
+LABEL service.version="2.0.0"
 
 WORKDIR /app
 

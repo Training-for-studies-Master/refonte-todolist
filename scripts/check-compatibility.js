@@ -8,6 +8,7 @@ const images = {
   gateway: "ghcr.io/training-for-studies-master/gateway:latest",
   notifications: "ghcr.io/training-for-studies-master/notifications:latest",
   frontend: "ghcr.io/training-for-studies-master/frontend:latest",
+  projects: "ghcr.io/training-for-studies-master/projects:latest",
 };
 
 // ----------------------------
