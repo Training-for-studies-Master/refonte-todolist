@@ -193,6 +193,8 @@ jobs:
     needs: [docker-apps, docker-services]
     runs-on: ubuntu-latest
 
+    if: always() && (needs.docker-apps.result == 'success' || needs.docker-services.result == 'success')
+
     steps:
       - uses: actions/checkout@v4
 
@@ -200,6 +202,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      
+      - name: Set owner lowercase
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
       - name: Pull images
         run: |
