@@ -206,6 +206,13 @@ jobs:
       - name: Set owner lowercase
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Pull images
         run: |
           docker pull ghcr.io/${OWNER_LC}/auth:latest
