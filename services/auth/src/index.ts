@@ -9,6 +9,7 @@ async function main() {
 // Test compatiblity
 // test manifest 
 // 13h36
+// 13h50
 main().catch((e) => {
   console.error(e);
   process.exit(1);
