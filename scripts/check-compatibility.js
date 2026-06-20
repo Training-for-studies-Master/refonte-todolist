@@ -13,16 +13,6 @@ const images = {
   projects: `ghcr.io/${owner}/projects:latest`,
 };
 
-// 👇 COPIE ET COLLE CE BLOC ICI :
-console.log("=== DEBUG DIRECT DE L'IMAGE AUTH ===");
-try {
-  const rawLabels = execSync(`docker inspect ${images.auth} --format '{{ json .Config.Labels }}'`).toString();
-  console.log("Labels bruts trouves pour auth :", rawLabels);
-} catch(e) {
-  console.error("Impossible d'inspecter auth en direct :", e.message);
-}
-console.log("====================================\n");
-
 // ----------------------------
 // Récupère les labels Docker
 // ----------------------------
