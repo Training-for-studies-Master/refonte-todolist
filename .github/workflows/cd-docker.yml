@@ -220,6 +220,7 @@ jobs:
           docker pull ghcr.io/${OWNER_LC}/gateway:latest
           docker pull ghcr.io/${OWNER_LC}/notifications:latest
           docker pull ghcr.io/${OWNER_LC}/projects:latest
+          docker pull ghcr.io/${OWNER_LC}/frontend:latest
 
       - name: Run compatibility check
         run: node scripts/check-compatibility.js
