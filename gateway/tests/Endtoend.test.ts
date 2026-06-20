@@ -6,15 +6,7 @@ import app from "../src/app";
 
 const agent = request.agent(app);
 const API_VERSION = "/v1";
-// Test de compatabilité 20.06.2026
-// 11h42
-// 11h55
-// 12h22
-// 12h32
-// 12h41, last ?
-// 12h50 last last 
-// 13h14
-// 13h25
+
 // Création projet
 test("POST /projects persists project in DB", async () => {
   const login = await agent
