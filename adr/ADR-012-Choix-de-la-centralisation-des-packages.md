@@ -1,4 +1,4 @@
-# ADR N°8 — Choix de la centralisation des packages
+# ADR N°12 — Choix de la centralisation des packages
 ## Titre : Choix de la centralisation des packages
 ## Status : Accepted 
 ## Contexte : Le projet Kanban est structuré sous forme de monorepo regroupant plusieurs applications et services (frontend, backend et services annexes) reposant sur Node.js. Dans ce contexte, plusieurs sous-projets partagent des dépendances communes (frameworks, outils de test, linters, bibliothèques de sécurité), ce qui entraîne une duplication importante des packages et une complexité accrue dans leur gestion. Sans mécanisme de centralisation, chaque service possède son propre dossier node_modules, ce qui entraîne une augmentation significative de l’espace disque utilisé ainsi que des temps d’installation plus longs lors des pipelines d’intégration continue. De plus, la cohérence des versions de dépendances entre les différents services peut devenir difficile à garantir, augmentant le risque d’incompatibilités ou de comportements divergents entre environnements.
