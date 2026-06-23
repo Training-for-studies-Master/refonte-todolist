@@ -10,21 +10,6 @@ declare module "express-session" {
   }
 }
 
-// Test 11h22
-// test 11h38
-// Test 11h48
-// Test 12h00
-// Test 12h11
-// TEst 12h21
-// Test 12h36
-// TEst 12h49
-// test 13h33
-// Test 15h30
-// Test 15h42
-// test 15h52
-// Test 16h01
-// Test 16h17
-
 const AUTH_URL = process.env.AUTH_URL || "http://auth:3001";
 const TASKS_URL = process.env.TASKS_URL || "http://tasks:3002";
 const PROJECTS_URL = process.env.PROJECTS_URL || "http://projects:3003";
