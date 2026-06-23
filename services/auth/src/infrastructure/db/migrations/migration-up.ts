@@ -3,11 +3,16 @@ import path from "path";
 import mysql from "mysql2/promise";
 
 async function run() {
+  if (process.env.RUN_MIGRATION !== "true") {
+    console.log("ℹ️ RUN_MIGRATION n'est pas défini sur 'true'. Migration ignorée.");
+    return;
+  }
   const connection = await mysql.createConnection({
     host: process.env.MYSQL_HOST,
     user: process.env.MYSQL_USER,
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DB,
+    multipleStatements: true,
   });
 
   // 1. On lit directement le dossier actuel (__dirname correspond à "migrations")
