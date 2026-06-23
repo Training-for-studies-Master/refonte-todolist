@@ -254,6 +254,18 @@ jobs:
           # On utilise un bloc try/catch implicite en bash (via ||) pour s'assurer 
           # que 'docker compose down' soit exécuté même si les tests échouent.
           npm run test && TEST_EXIT_CODE=0 || TEST_EXIT_CODE=$?
+
+          if [ $TEST_EXIT_CODE -ne 0 ]; then
+            echo "======================================================="
+            echo "❌ CRASH DÉTECTÉ - RECHERCHE DE L'ERREUR 500 DANS LES LOGS"
+            echo "======================================================="
+            echo "👉 LOGS DU SERVICE GATEWAY :"
+            docker compose -f ../docker-compose.yml logs gateway --no-log-prefix | head -n 40
+            echo "-------------------------------------------------------"
+            echo "👉 LOGS DU SERVICE AUTH :"
+            docker compose -f ../docker-compose.yml logs auth --no-log-prefix | head -n 40
+            echo "======================================================="
+          fi
           
           # 4. Nettoyer et couper les conteneurs
           cd ..

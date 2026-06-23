@@ -46,10 +46,6 @@ function bumpVersion(currentVersion, type) {
   return parts.join('.');
 }
 
-// Note : Actuellement ton manifeste stocke "provides": "v1". 
-// Si tu passes à un système SemVer pour "provides" (ex: "1.0.0"), utilise la logique ci-dessous :
-const currentProvides = manifest[serviceName].provides;
-
 // Exemple d'évolution : si ton provides est "v1", "v2", on extrait le chiffre.
 // Si c'est du SemVer pur, on utilise bumpVersion.
 let newProvides = currentProvides;
