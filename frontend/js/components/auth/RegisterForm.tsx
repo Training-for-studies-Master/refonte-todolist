@@ -9,6 +9,7 @@ type Props = {
 export function RegisterForm({ onRegister }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [birthDate, setBirthDate] = useState(""); // Nouvel état pour la date
   const [submitting, setSubmitting] = useState(false);
 
   const submitRegister = async (e: React.FormEvent) => {
@@ -16,7 +17,8 @@ export function RegisterForm({ onRegister }: Props) {
     setSubmitting(true);
 
     try {
-      await register(username, password);
+      // On envoie la birthDate à l'API
+      await register(username, password, birthDate);
       onRegister();
     } catch (e) {
       console.error(e);
@@ -43,8 +45,19 @@ export function RegisterForm({ onRegister }: Props) {
         disabled={submitting}
         className="mb-2"
       />
-      <Button type="submit" disabled={submitting || !username || !password}>
-        {submitting ? "En cours d'inscription..." : "Inscription réussie"}
+      
+      <Form.Group className="mb-2">
+        <Form.Label className="text-muted small">Date de naissance (Optionnel)</Form.Label>
+        <Form.Control
+          type="date"
+          value={birthDate}
+          onChange={(e) => setBirthDate(e.target.value)}
+          disabled={submitting}
+        />
+      </Form.Group>
+
+      <Button type="submit" disabled={submitting || !username || !password} className="w-100">
+        {submitting ? "En cours d'inscription..." : "S'inscrire"}
       </Button>
     </Form>
   );
