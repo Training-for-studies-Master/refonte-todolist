@@ -194,6 +194,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: read
 
     if: always() && (needs.docker-apps.result == 'success' || needs.docker-services.result == 'success')
 
