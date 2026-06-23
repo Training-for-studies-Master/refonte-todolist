@@ -192,11 +192,15 @@ jobs:
   compatibility-check:
     needs: [docker-apps, docker-services]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     if: always() && (needs.docker-apps.result == 'success' || needs.docker-services.result == 'success')
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -226,3 +230,50 @@ jobs:
         env:
           OWNER_LC: ${{ env.OWNER_LC }}
         run: node scripts/check-compatibility.js
+
+      - name: Run Integration Tests (Gateway)
+        if: success()
+        run: |
+          cd gateway
+          pnpm install --frozen-lockfile
+          pnpm run test
+
+      - name: Detect modified service and upgrade manifest
+        if: success()
+        run: |
+          # 1. On récupère le chemin complet du premier fichier modifié
+          FIRST_CHANGED_FILE=$(git diff-tree --no-commit-id --name-only -r HEAD | head -n 1)
+          echo "Fichier modifié détecté : $FIRST_CHANGED_FILE"
+          
+          # 2. Logique de détection du nom du service selon l'emplacement
+          if [[ "$FIRST_CHANGED_FILE" == services/* ]]; then
+            # Si le fichier est dans services/auth/src/..., on extrait "auth" (le 2ème élément)
+            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f2)
+          else
+            # Si le fichier est à la racine, ex: gateway/src/..., on extrait "gateway" (le 1er élément)
+            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f1)
+          fi
+          
+          echo "Service identifié : $CHANGED_SERVICE"
+          
+          # 3. Liste des services valides attendus par ton manifeste
+          VALID_SERVICES="auth tasks gateway notifications projects frontend"
+          
+          # 4. Si le service détecté est valide, on lance le script d'upgrade
+          if echo "$VALID_SERVICES" | grep -w "$CHANGED_SERVICE" > /dev/null; then
+            echo "🚀 Incrémentation du manifeste pour le service : $CHANGED_SERVICE"
+            node scripts/upgrade-manifest.js "$CHANGED_SERVICE" patch
+          else
+            echo "⚠️ Le changement ($CHANGED_SERVICE) ne concerne pas un service du manifeste. Pas d'incrémentation."
+          fi
+
+      - name: Commit and Push upgraded manifest
+        if: success()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add compatibility-manifest.json
+          
+          # push uniquement s'il y a une vraie modification pour éviter de faire planter la CI
+          git diff-index --quiet HEAD || (git commit -m "chore(ci): upgrade compatibility manifest [skip ci]" && git push origin HEAD:${{ github.ref }})
