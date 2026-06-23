@@ -330,3 +330,35 @@ jobs:
           
           # push uniquement s'il y a une vraie modification pour éviter de faire planter la CI
           git diff-index --quiet HEAD || (git commit -m "chore(ci): upgrade compatibility manifest [skip ci]" && git push origin HEAD:${{ github.ref }})
+      
+  deploy-prod:
+    needs: [compatibility-and-tests]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      # 1. On se connecte en SSH à ton serveur de production
+      - name: Deploy to Production via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.PROD_SERVER_IP }}
+          username: ${{ secrets.PROD_SERVER_USER }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          envs: GITHUB_SHA  # On transmet le SHA du commit au serveur
+          script: |
+            cd /app/refonte-todolist
+            
+            # 2. On récupère le dernier état du code (notamment le script JS et nginx.conf)
+            git pull origin main
+            
+            # 3. LE LIEN AVEC LES MIGRATIONS :
+            # On exécute les migrations sur la BDD de prod avec la nouvelle version de l'image
+            echo "⚡ Lancement des migrations..."
+            export TARGET_VERSION=${{ github.sha }}
+            docker compose run --rm auth-migrations
+
+            # 4. LE LIEN AVEC LE BLEU/VERT :
+            # On lance le script Node.js qui va détecter la couleur inactive,
+            # démarrer les nouveaux conteneurs, vérifier leur santé, et basculer Nginx.
+            echo "🔄 Lancement de la bascule Bleu/Vert..."
+            node scripts/deploy-blue-green.js
