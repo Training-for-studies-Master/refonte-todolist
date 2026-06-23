@@ -245,7 +245,7 @@ jobs:
           # 2. Attendre que les services soient prêts (healthcheck)
           # Les conteneurs peuvent prendre quelques secondes à démarrer (surtout les bases de données)
           echo "⏳ Attente du démarrage des conteneurs..."
-          sleep 10 
+          sleep 30
           
           # 3. Installer les dépendances et lancer les tests
           cd gateway
