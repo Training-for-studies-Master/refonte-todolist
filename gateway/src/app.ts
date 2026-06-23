@@ -13,7 +13,7 @@ declare module "express-session" {
 const AUTH_URL = process.env.AUTH_URL || "http://auth:3001";
 const TASKS_URL = process.env.TASKS_URL || "http://tasks:3002";
 const PROJECTS_URL = process.env.PROJECTS_URL || "http://projects:3003";
-const API_VERSION = "/v1";
+const API_VERSION = "/v2";
 const SERVICE_VERSION = "v1";
 
 const app = express();
@@ -36,7 +36,7 @@ function requireAuth(req: express.Request, res: express.Response, next: express.
 }
 
 app.post(`${API_VERSION}/auth/register`, async (req, res) => {
-  const r = await fetch(`${AUTH_URL}/${SERVICE_VERSION}/register`, {
+  const r = await fetch(`${AUTH_URL}/v2/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req.body),
@@ -64,7 +64,7 @@ app.post(`${API_VERSION}/auth/logout`, (req, res) => {
 });
 
 app.get(`${API_VERSION}/auth/me`, requireAuth, async (req, res) => {
-  const r = await fetch(`${AUTH_URL}/${SERVICE_VERSION}/me`, { headers: { "X-User-Id": req.session.userId! } });
+  const r = await fetch(`${AUTH_URL}/v2/me`, { headers: { "X-User-Id": req.session.userId! } });
   res.status(r.status).json(await r.json());
 });
 
