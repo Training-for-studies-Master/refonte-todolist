@@ -17,3 +17,31 @@ services:
     depends_on:
     - auth-migrations
   
+  # --- INFRASTRUCTURE FIXE ---
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+  database:
+    image: mysql:8.0
+    # ... ta config BDD
+
+  # --- ENVIRONNEMENT BLEU ---
+  gateway-blue:
+    image: ghcr.io/owner/gateway:v2.0.0
+    ports:
+      - "8081:3000"
+  auth-blue:
+    image: ghcr.io/owner/auth:v2.0.0
+
+  # --- ENVIRONNEMENT VERT ---
+  gateway-green:
+    image: ghcr.io/owner/gateway:v2.0.0
+    ports:
+      - "8082:3000"
+  auth-green:
+    image: ghcr.io/owner/auth:v2.0.0
+  
