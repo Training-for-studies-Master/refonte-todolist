@@ -246,6 +246,19 @@ jobs:
           # Les conteneurs peuvent prendre quelques secondes à démarrer (surtout les bases de données)
           echo "⏳ Attente du démarrage des conteneurs..."
           sleep 30
+
+          echo "⏳ Attente active que MySQL écoute sur le port 3306..."
+          # Boucle tant que le port 3306 ne répond pas (timeout de 60 secondes max)
+          TIMEOUT=60
+          while ! docker compose exec -T mysql mysqladmin ping -h "localhost" --silent &>/dev/null; do
+            echo "   MySQL n'est pas encore prêt... pause de 2s"
+            sleep 2
+            TIMEOUT=$((TIMEOUT-2))
+            if [ $TIMEOUT -le 0 ]; then
+              echo "❌ Timeout dépassé : MySQL n'a pas démarré à temps."
+              exit 1
+            fi
+          done
           
           # 3. Installer les dépendances et lancer les tests
           cd gateway
