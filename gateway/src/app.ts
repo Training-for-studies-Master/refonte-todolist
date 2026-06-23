@@ -30,17 +30,32 @@ app.use(
   })
 );
 
+function getServiceVersion(req: express.Request): string {
+  const clientVersion = req.header("X-Client-Version"); // Ex: "1.0.0" ou "2.0.0"
+
+  // Règle de routage : Si le client est en version 2.x, on le route vers la v2 du microservice
+  if (clientVersion && clientVersion.startsWith("2.")) {
+    return "v2";
+  }
+
+  // Version par défaut pour les anciens clients (Rétrocompatibilité)
+  return "v1";
+}
+
 function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!req.session.userId) return res.status(401).json({ error: "Not authenticated" });
   next();
 }
 
 app.post(`${API_VERSION}/auth/register`, async (req, res) => {
-  const r = await fetch(`${AUTH_URL}/v2/register`, {
+  const serviceVersion = getServiceVersion(req);
+
+  const r = await fetch(`${AUTH_URL}/${serviceVersion}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req.body),
   });
+  
   const data = await r.json();
   if (!r.ok) return res.status(r.status).json(data);
   req.session.userId = data.userId;
@@ -64,7 +79,15 @@ app.post(`${API_VERSION}/auth/logout`, (req, res) => {
 });
 
 app.get(`${API_VERSION}/auth/me`, requireAuth, async (req, res) => {
-  const r = await fetch(`${AUTH_URL}/v2/me`, { headers: { "X-User-Id": req.session.userId! } });
+  // On détermine dynamiquement la version ("v1" ou "v2") selon le client
+  const serviceVersion = getServiceVersion(req); 
+  
+  console.log(`🔀 Routage vers le service auth en version : ${serviceVersion}`);
+
+  const r = await fetch(`${AUTH_URL}/${serviceVersion}/me`, { 
+    headers: { "X-User-Id": req.session.userId! } 
+  });
+  
   res.status(r.status).json(await r.json());
 });
 
