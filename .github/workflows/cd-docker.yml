@@ -260,6 +260,9 @@ jobs:
               exit 1
             fi
           done
+
+          echo "🚀 Exécution forcée des migrations dans le service auth..."
+          docker compose run -T --rm -e RUN_MIGRATION=true --workdir /app/services/auth auth npm run migrate
           
           # 3. Installer les dépendances et lancer les tests
           cd gateway

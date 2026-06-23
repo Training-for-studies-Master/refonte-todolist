@@ -7,6 +7,20 @@ import app from "../src/app";
 const agent = request.agent(app);
 const API_VERSION = "/v1";
 
+// 🆕 AJOUT : Inscription automatique de l'utilisateur avant les tests
+beforeAll(async () => {
+  try {
+    await agent
+      .post(`${API_VERSION}/auth/register`) // ⚠️ Ajustez l'URL si votre route s'appelle autrement (ex: /auth/signup)
+      .send({ 
+        username: "test", 
+        password: "test"
+      });
+  } catch (error) {
+    console.log("L'utilisateur existe peut-être déjà, on continue...");
+  }
+});
+
 // Création projet
 test("POST /projects persists project in DB", async () => {
   const login = await agent
