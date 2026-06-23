@@ -9,15 +9,17 @@ const API_VERSION = "/v1";
 
 // 🆕 AJOUT : Inscription automatique de l'utilisateur avant les tests
 beforeAll(async () => {
-  try {
-    await agent
-      .post(`${API_VERSION}/auth/register`) // ⚠️ Ajustez l'URL si votre route s'appelle autrement (ex: /auth/signup)
-      .send({ 
-        username: "test", 
-        password: "test"
-      });
-  } catch (error) {
-    console.log("L'utilisateur existe peut-être déjà, on continue...");
+  const registerRes = await agent
+    .post(`${API_VERSION}/auth/register`) // S'assurer que le préfixe correspond bien (ex: /v1/auth/register ou /v1/register)
+    .send({ 
+      username: "test", 
+      password: "test" 
+    });
+
+  // Si le statut est 200 (créé) ou 409 (déjà existant en local), tout va bien.
+  // Si c'est autre chose (ex: 500, 400), on force le test à échouer pour voir l'erreur.
+  if (registerRes.status !== 200 && registerRes.status !== 409) {
+    throw new Error(`L'inscription du compte de test a échoué avec le statut ${registerRes.status}: ${JSON.stringify(registerRes.body)}`);
   }
 });
 
