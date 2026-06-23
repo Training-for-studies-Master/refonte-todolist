@@ -236,6 +236,7 @@ jobs:
         if: success()
         env:
           OWNER_LC: ${{ env.OWNER_LC }} # Transmet la variable pour le docker-compose ou les images
+          RUN_MIGRATION: "true"
         run: |
           # 1. Démarre tes conteneurs en arrière-plan (-d)
           # Note : Si ton docker-compose.yml utilise la variable $OWNER_LC pour les images, il la lira ici.
