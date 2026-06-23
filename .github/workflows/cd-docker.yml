@@ -234,10 +234,33 @@ jobs:
 
       - name: Run Integration Tests (Gateway)
         if: success()
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }} # Transmet la variable pour le docker-compose ou les images
         run: |
+          # 1. Démarre tes conteneurs en arrière-plan (-d)
+          # Note : Si ton docker-compose.yml utilise la variable $OWNER_LC pour les images, il la lira ici.
+          # Si ton docker-compose est à la racine, retire le "cd gateway" ou adapte le chemin (-f path/to/docker-compose.yml)
+          docker compose up -d
+          
+          # 2. Attendre que les services soient prêts (healthcheck)
+          # Les conteneurs peuvent prendre quelques secondes à démarrer (surtout les bases de données)
+          echo "⏳ Attente du démarrage des conteneurs..."
+          sleep 10 
+          
+          # 3. Installer les dépendances et lancer les tests
           cd gateway
           npm install
-          npm run test
+          
+          # On utilise un bloc try/catch implicite en bash (via ||) pour s'assurer 
+          # que 'docker compose down' soit exécuté même si les tests échouent.
+          npm run test && TEST_EXIT_CODE=0 || TEST_EXIT_CODE=$?
+          
+          # 4. Nettoyer et couper les conteneurs
+          cd ..
+          docker compose down
+          
+          # 5. Faire remonter le bon code d'erreur à GitHub Actions
+          exit $TEST_EXIT_CODE
 
       - name: Detect modified service and upgrade manifest
         if: success()
