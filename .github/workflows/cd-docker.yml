@@ -236,8 +236,8 @@ jobs:
         if: success()
         run: |
           cd gateway
-          pnpm install --frozen-lockfile
-          pnpm run test
+          npm install
+          npm run test
 
       - name: Detect modified service and upgrade manifest
         if: success()
