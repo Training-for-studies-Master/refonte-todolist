@@ -4,6 +4,8 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import cors from "cors";
 
+// Test 24.06.26 15:57
+
 declare module "express-session" {
   interface SessionData {
     userId?: string;
