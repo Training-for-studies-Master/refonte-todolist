@@ -6,6 +6,11 @@ on:
     paths-ignore:
       - 'compatibility-manifest.json'
 
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
 jobs:
   changes:
     runs-on: ubuntu-latest
