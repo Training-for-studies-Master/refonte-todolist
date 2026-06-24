@@ -307,7 +307,7 @@ jobs:
         with:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
-          key: ${{ secrets.PROD_SERVER_SSH_KEY }} # Partagé ou à remplacer par votre clé INT
+          key: ${{ secrets.SSH_PRIVATE_KEY_INT }} # Partagé ou à remplacer par votre clé INT
           envs: GITHUB_SHA
           script: |
             cd /app/refonte-todolist
@@ -333,7 +333,7 @@ jobs:
         with:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
-          key: ${{ secrets.PROD_SERVER_SSH_KEY }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
           envs: GITHUB_SHA
           script: |
             cd /app/refonte-todolist
