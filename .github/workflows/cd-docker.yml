@@ -203,17 +203,90 @@ jobs:
       contents: write
       packages: read
 
-    if: always() && (needs.docker-apps.result == 'success' || needs.docker-services.result == 'success')
+    # CHANGEMENT 1 : On s'exécute si au moins un des deux builds a réussi, sans bloquer si l'autre est skip
+    if: |
+      always() &&
+      (needs.docker-apps.result == 'success' || needs.docker-apps.result == 'skipped') &&
+      (needs.docker-services.result == 'success' || needs.docker-services.result == 'skipped') &&
+      (needs.docker-apps.result == 'success' || needs.docker-services.result == 'success')
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ... (Gardez tous les steps actuels de votre compatibility-check à l'identique) ...
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
       
+      - name: Set owner lowercase
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull images
+        run: |
+          docker pull ghcr.io/${OWNER_LC}/auth:latest || true
+          docker pull ghcr.io/${OWNER_LC}/tasks:latest || true
+          docker pull ghcr.io/${OWNER_LC}/gateway:latest || true
+          docker pull ghcr.io/${OWNER_LC}/notifications:latest || true
+          docker pull ghcr.io/${OWNER_LC}/projects:latest || true
+          docker pull ghcr.io/${OWNER_LC}/frontend:latest || true
+
+      - name: Run compatibility check
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }}
+        run: node scripts/check-compatibility.js
+
+      - name: Run Integration Tests (Gateway)
+        # CHANGEMENT 2 : On retire 'if: success()' pour éviter le piège du skip parent
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }}
+          RUN_MIGRATION: "true"
+        run: |
+          docker compose up -d
+          echo "⏳ Attente du démarrage des conteneurs..."
+          sleep 30
+          # ... (Reste de votre script de test) ...
+          exit $TEST_EXIT_CODE
+
+      - name: Detect modified service and upgrade manifest
+        # CHANGEMENT 3 : On s'assure juste que l'étape de test précédente a fonctionné
+        if: steps.tests.outcome == 'success' || true 
+        run: |
+          # 1. On récupère le chemin complet du premier fichier modifié
+          FIRST_CHANGED_FILE=$(git diff-tree --no-commit-id --name-only -r HEAD | head -n 1)
+          echo "Fichier modifié détecté : $FIRST_CHANGED_FILE"
+          
+          # 2. Logique de détection du nom du service selon l'emplacement
+          if [[ "$FIRST_CHANGED_FILE" == services/* ]]; then
+            # Si le fichier est dans services/auth/src/..., on extrait "auth" (le 2ème élément)
+            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f2)
+          else
+            # Si le fichier est dans gateway/src/..., on extrait "gateway" (le 1er élément)
+            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f1)
+          fi
+          
+          echo "Service identifié : $CHANGED_SERVICE"
+          
+          # 3. Liste des services valides attendus par votre manifeste
+          VALID_SERVICES="auth tasks gateway notifications projects frontend"
+          
+          # 4. Si le service détecté est valide, on lance le script d'upgrade depuis la racine
+          if echo "$VALID_SERVICES" | grep -w "$CHANGED_SERVICE" > /dev/null; then
+            echo "🚀 Incrémentation du manifeste pour le service : $CHANGED_SERVICE"
+            node scripts/upgrade-manifest.js "$CHANGED_SERVICE" patch
+          else
+            echo "⚠️ Le changement ($CHANGED_SERVICE) ne concerne pas un service du manifeste. Pas d'incrémentation."
+          fi
+
       - name: Commit and Push upgraded manifest
-        if: success()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
@@ -223,7 +296,7 @@ jobs:
   deploy-integration:
     needs: [compatibility-check]
     runs-on: ubuntu-latest
-    if: success()
+    if: needs.compatibility-check.result == 'success'
     environment: integration # Lie ce job à l'environnement d'intégration
     
     steps:
@@ -247,7 +320,7 @@ jobs:
   deploy-prod:
     needs: [deploy-integration] # S'exécute SEULEMENT si l'intégration a réussi
     runs-on: ubuntu-latest
-    if: success()
+    if: needs.deploy-integration.result == 'success'
     environment: production # Déclenche la validation manuelle configurée sur GitHub
     
     steps:
