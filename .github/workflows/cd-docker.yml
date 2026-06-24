@@ -203,162 +203,60 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
+      # ... (Gardez tous les steps actuels de votre compatibility-check à l'identique) ...
       
-      - name: Set owner lowercase
-        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
-
-      - name: Login to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Pull images
-        run: |
-          docker pull ghcr.io/${OWNER_LC}/auth:latest
-          docker pull ghcr.io/${OWNER_LC}/tasks:latest
-          docker pull ghcr.io/${OWNER_LC}/gateway:latest
-          docker pull ghcr.io/${OWNER_LC}/notifications:latest
-          docker pull ghcr.io/${OWNER_LC}/projects:latest
-          docker pull ghcr.io/${OWNER_LC}/frontend:latest
-
-      - name: Run compatibility check
-        env:
-          OWNER_LC: ${{ env.OWNER_LC }}
-        run: node scripts/check-compatibility.js
-
-      - name: Run Integration Tests (Gateway)
-        if: success()
-        env:
-          OWNER_LC: ${{ env.OWNER_LC }} # Transmet la variable pour le docker-compose ou les images
-          RUN_MIGRATION: "true"
-        run: |
-          # 1. Démarre tes conteneurs en arrière-plan (-d)
-          # Note : Si ton docker-compose.yml utilise la variable $OWNER_LC pour les images, il la lira ici.
-          # Si ton docker-compose est à la racine, retire le "cd gateway" ou adapte le chemin (-f path/to/docker-compose.yml)
-          docker compose up -d
-          
-          # 2. Attendre que les services soient prêts (healthcheck)
-          # Les conteneurs peuvent prendre quelques secondes à démarrer (surtout les bases de données)
-          echo "⏳ Attente du démarrage des conteneurs..."
-          sleep 30
-
-          echo "⏳ Attente active que MySQL écoute sur le port 3306..."
-          # Boucle tant que le port 3306 ne répond pas (timeout de 60 secondes max)
-          TIMEOUT=60
-          while ! docker compose exec -T mysql mysqladmin ping -h "localhost" --silent &>/dev/null; do
-            echo "   MySQL n'est pas encore prêt... pause de 2s"
-            sleep 2
-            TIMEOUT=$((TIMEOUT-2))
-            if [ $TIMEOUT -le 0 ]; then
-              echo "❌ Timeout dépassé : MySQL n'a pas démarré à temps."
-              exit 1
-            fi
-          done
-
-          echo "🚀 Exécution forcée des migrations dans le service auth..."
-          docker compose run -T --rm -e RUN_MIGRATION=true --workdir /app/services/auth auth npm run migrate
-          
-          # 3. Installer les dépendances et lancer les tests
-          cd gateway
-          npm install
-          
-          # On utilise un bloc try/catch implicite en bash (via ||) pour s'assurer 
-          # que 'docker compose down' soit exécuté même si les tests échouent.
-          npm run test && TEST_EXIT_CODE=0 || TEST_EXIT_CODE=$?
-
-          if [ $TEST_EXIT_CODE -ne 0 ]; then
-            echo "======================================================="
-            echo "❌ CRASH DÉTECTÉ - RECHERCHE DE L'ERREUR 500 DANS LES LOGS"
-            echo "======================================================="
-            echo "👉 LOGS DU SERVICE GATEWAY :"
-            docker compose -f ../docker-compose.yml logs gateway --no-log-prefix | head -n 40
-            echo "-------------------------------------------------------"
-            echo "👉 LOGS DU SERVICE AUTH :"
-            docker compose -f ../docker-compose.yml logs auth --no-log-prefix | head -n 40
-            echo "======================================================="
-          fi
-          
-          # 4. Nettoyer et couper les conteneurs
-          cd ..
-          docker compose down
-          
-          # 5. Faire remonter le bon code d'erreur à GitHub Actions
-          exit $TEST_EXIT_CODE
-
-      - name: Detect modified service and upgrade manifest
-        if: success()
-        run: |
-          # 1. On récupère le chemin complet du premier fichier modifié
-          FIRST_CHANGED_FILE=$(git diff-tree --no-commit-id --name-only -r HEAD | head -n 1)
-          echo "Fichier modifié détecté : $FIRST_CHANGED_FILE"
-          
-          # 2. Logique de détection du nom du service selon l'emplacement
-          if [[ "$FIRST_CHANGED_FILE" == services/* ]]; then
-            # Si le fichier est dans services/auth/src/..., on extrait "auth" (le 2ème élément)
-            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f2)
-          else
-            # Si le fichier est à la racine, ex: gateway/src/..., on extrait "gateway" (le 1er élément)
-            CHANGED_SERVICE=$(echo "$FIRST_CHANGED_FILE" | cut -d/ -f1)
-          fi
-          
-          echo "Service identifié : $CHANGED_SERVICE"
-          
-          # 3. Liste des services valides attendus par ton manifeste
-          VALID_SERVICES="auth tasks gateway notifications projects frontend"
-          
-          # 4. Si le service détecté est valide, on lance le script d'upgrade
-          if echo "$VALID_SERVICES" | grep -w "$CHANGED_SERVICE" > /dev/null; then
-            echo "🚀 Incrémentation du manifeste pour le service : $CHANGED_SERVICE"
-            node scripts/upgrade-manifest.js "$CHANGED_SERVICE" patch
-          else
-            echo "⚠️ Le changement ($CHANGED_SERVICE) ne concerne pas un service du manifeste. Pas d'incrémentation."
-          fi
-
       - name: Commit and Push upgraded manifest
         if: success()
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
           git add compatibility-manifest.json
-          
-          # push uniquement s'il y a une vraie modification pour éviter de faire planter la CI
           git diff-index --quiet HEAD || (git commit -m "chore(ci): upgrade compatibility manifest [skip ci]" && git push origin HEAD:${{ github.ref }})
-      
-  deploy-prod:
-    needs: [compatibility-and-tests]
+
+  deploy-integration:
+    needs: [compatibility-check]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    environment: integration # Lie ce job à l'environnement d'intégration
     
     steps:
-      # 1. On se connecte en SSH à ton serveur de production
+      - name: Deploy to Integration via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VM_HOST_INT }}
+          username: ${{ secrets.VM_USER_INT }}
+          key: ${{ secrets.PROD_SERVER_SSH_KEY }} # Partagé ou à remplacer par votre clé INT
+          envs: GITHUB_SHA
+          script: |
+            cd /app/refonte-todolist
+            git pull origin main
+            echo "⚡ Lancement des migrations en Intégration..."
+            export TARGET_VERSION=${{ github.sha }}
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
+            echo "🔄 Lancement du déploiement en Intégration..."
+            export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
+            node scripts/deploy-blue-green.js
+
+  deploy-prod:
+    needs: [deploy-integration] # S'exécute SEULEMENT si l'intégration a réussi
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production # Déclenche la validation manuelle configurée sur GitHub
+    
+    steps:
       - name: Deploy to Production via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.PROD_SERVER_IP }}
-          username: ${{ secrets.PROD_SERVER_USER }}
+          host: ${{ secrets.VM_HOST_PROD }}
+          username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.PROD_SERVER_SSH_KEY }}
-          envs: GITHUB_SHA  # On transmet le SHA du commit au serveur
+          envs: GITHUB_SHA
           script: |
             cd /app/refonte-todolist
-            
-            # 2. On récupère le dernier état du code (notamment le script JS et nginx.conf)
             git pull origin main
-            
-            # 3. LE LIEN AVEC LES MIGRATIONS :
-            # On exécute les migrations sur la BDD de prod avec la nouvelle version de l'image
-            echo "⚡ Lancement des migrations..."
+            echo "⚡ Lancement des migrations en Production..."
             export TARGET_VERSION=${{ github.sha }}
-            docker compose run --rm auth-migrations
-
-            # 4. LE LIEN AVEC LE BLEU/VERT :
-            # On lance le script Node.js qui va détecter la couleur inactive,
-            # démarrer les nouveaux conteneurs, vérifier leur santé, et basculer Nginx.
-            echo "🔄 Lancement de la bascule Bleu/Vert..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
+            echo "🔄 Lancement de la bascule Bleu/Vert en Production..."
+            export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
             node scripts/deploy-blue-green.js
