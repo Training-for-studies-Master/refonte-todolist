@@ -296,7 +296,9 @@ jobs:
   deploy-integration:
     needs: [compatibility-check]
     runs-on: ubuntu-latest
-    if: needs.compatibility-check.result == 'success'
+    if: |
+      always() && 
+      needs.compatibility-check.result == 'success'
     environment: integration # Lie ce job à l'environnement d'intégration
     
     steps:
@@ -320,7 +322,9 @@ jobs:
   deploy-prod:
     needs: [deploy-integration] # S'exécute SEULEMENT si l'intégration a réussi
     runs-on: ubuntu-latest
-    if: needs.deploy-integration.result == 'success'
+    if: |
+      always() && 
+      needs.deploy-integration.result == 'success'
     environment: production # Déclenche la validation manuelle configurée sur GitHub
     
     steps:
