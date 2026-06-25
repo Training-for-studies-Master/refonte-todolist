@@ -14,12 +14,15 @@ COPY package.json ./
 COPY . .
 
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
-RUN pnpm --filter frontend build
+
+# CHANGEMENT 1 : On se déplace directement dans le dossier du frontend pour le build
+WORKDIR /app/refonte-todolist/frontend
+RUN pnpm build
 
 # --- ÉTAPE 2 : Le Serveur Statique ---
 FROM nginx:alpine
 
-# Ajustement avec votre chemin exact
+# CHANGEMENT 2 : Le chemin est maintenant beaucoup plus simple et direct !
 COPY --from=builder /app/refonte-todolist/frontend/dist /usr/share/nginx/html
 
 # On expose et configure le port 5173
