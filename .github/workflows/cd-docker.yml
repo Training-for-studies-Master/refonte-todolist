@@ -302,14 +302,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ÉTAPE 1 : Envoi des fichiers de config et scripts sur la VM d'Intégration
+      # ÉTAPE 1 : Envoi des fichiers de config, scripts et nginx.conf sur la VM d'Intégration
       - name: Copy Compose and Scripts to Integration VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
-          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*,mysql-init/*"
+          # --- AJOUT DE nginx.conf ICI ---
+          source: "docker-compose.yml,docker-compose.prod.yml,nginx.conf,scripts/*,mysql-init/*"
           target: "/app/refonte-todolist"
 
       # ÉTAPE 2 : Exécution des commandes Docker à distance
@@ -367,23 +368,29 @@ jobs:
               -e NOTIFICATIONS_VERSION \
               node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
 
+            # --- GESTION ET RECHARGEMENT DU REVERSE PROXY ---
+            echo "📺 Démarrage/Rechargement de Nginx en Intégration..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T nginx nginx -s reload
+
   deploy-prod:
     needs: [deploy-integration, changes] # S'exécute SEULEMENT si l'intégration a réussi
     runs-on: ubuntu-latest
     if: always() && needs.deploy-integration.result == 'success'
-    environment: production # Charge les secrets de l'environnement Production (Déclenche la validation manuelle)
+    environment: production # Charge les secrets de l'environnement Production
     
     steps:
       - uses: actions/checkout@v4
 
-      # ÉTAPE 1 : Envoi des fichiers de configuration et scripts vers la VM de Production (via SCP)
+      # ÉTAPE 1 : Envoi des fichiers de configuration, scripts et nginx.conf vers la VM de Production
       - name: Copy Compose and Scripts to Production VM
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*,mysql-init/*"
+          # --- AJOUT DE nginx.conf ICI ---
+          source: "docker-compose.yml,docker-compose.prod.yml,nginx.conf,scripts/*,mysql-init/*"
           target: "/app/refonte-todolist"
 
       # ÉTAPE 2 : Connexion SSH et déploiement des conteneurs
@@ -441,3 +448,8 @@ jobs:
               -e PROJECTS_VERSION \
               -e NOTIFICATIONS_VERSION \
               node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
+
+            # --- GESTION ET RECHARGEMENT DU REVERSE PROXY ---
+            echo "📺 Démarrage/Rechargement de Nginx en Production..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d nginx
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml exec -T nginx nginx -s reload
