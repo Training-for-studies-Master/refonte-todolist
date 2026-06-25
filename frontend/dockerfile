@@ -15,15 +15,20 @@ COPY . .
 
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
 
-# CORRECTION : On reste à la racine de /app et on filtre uniquement sur le frontend
-# Le drapeau --prod n'est pas mis ici car pnpm build a besoin des devDependencies (Vite, TypeScript, etc.)
+# Build du frontend uniquement
 RUN pnpm --filter frontend build
 
 # --- ÉTAPE 2 : Le Serveur Statique ---
 FROM nginx:alpine
 
-# Le dossier dist se trouve bien dans le sous-dossier du monorepo
-COPY --from=builder /app/refonte-todolist/frontend/dist /usr/share/nginx/html
+# CORRECTION DU CHEMIN : 
+# Puisque le build a réussi, les fichiers sont dans le dossier dist généré à la racine de l'espace de travail du builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Si l'erreur persiste avec /app/dist, tentez ce chemin alternatif :
+# COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
+# ou tout simplement :
+# COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
 # On expose et configure le port 5173
 EXPOSE 5173
