@@ -21,6 +21,11 @@ RUN pnpm --filter frontend build
 # --- ÉTAPE 2 : Le Serveur Statique ---
 FROM nginx:alpine
 
+LABEL provides.api-version="v1"
+LABEL service.name="frontend"
+LABEL requires.gateway=">=1.0.0 <=2.0.0"
+LABEL service.version="2.0.0"
+
 # Le dossier dist se trouve dans le package 'frontend' défini par votre workspace
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
