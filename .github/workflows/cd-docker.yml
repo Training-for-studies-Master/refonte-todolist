@@ -345,6 +345,7 @@ jobs:
             echo "🔄 Lancement du déploiement Blue/Green en Intégration..."
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
+              -v ~/.docker:/root/.docker \
               -v $(pwd):/app \
               -w /app \
               -e GITHUB_SHA=${{ github.sha }} \
@@ -411,6 +412,7 @@ jobs:
             echo "🔄 Lancement de la bascule Bleu/Vert en Production..."
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
+              -v ~/.docker:/root/.docker \
               -v $(pwd):/app \
               -w /app \
               -e GITHUB_SHA=${{ github.sha }} \
