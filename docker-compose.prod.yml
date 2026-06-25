@@ -2,7 +2,7 @@ services:
   # Conteneur éphémère pour exécuter les migrations de base de données avant la bascule
   auth-migrations:
     restart: "no"
-    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
     command: pnpm --filter auth run migrate
     environment:
       MYSQL_HOST: mysql
@@ -28,12 +28,12 @@ services:
 
   # --- ENVIRONNEMENT BLEU ---
   frontend-blue:
-    image: ghcr.io/${OWNER_LC}/frontend:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
     ports:
       - "5174:5173"
 
   gateway-blue:
-    image: ghcr.io/${OWNER_LC}/gateway:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
     ports:
       - "8081:3000"
     environment:
@@ -43,7 +43,7 @@ services:
       SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
 
   auth-blue:
-    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
     command: pnpm --filter auth start
     environment:
       PORT: 3001
@@ -53,33 +53,34 @@ services:
       MYSQL_DB: auth_db
 
   tasks-blue:
-    image: ghcr.io/${OWNER_LC}/tasks:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
   projects-blue:
-    image: ghcr.io/${OWNER_LC}/projects:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
   notifications-blue:
-    image: ghcr.io/${OWNER_LC}/notifications:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
     environment:
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
+
   # --- ENVIRONNEMENT VERT ---
   frontend-green:
-    image: ghcr.io/${OWNER_LC}/frontend:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
     ports:
       - "5175:5173"
 
   gateway-green:
-    image: ghcr.io/${OWNER_LC}/gateway:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
     ports:
       - "8082:3000"
     environment:
@@ -89,7 +90,7 @@ services:
       SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
 
   auth-green:
-    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
     command: pnpm --filter auth start
     environment:
       PORT: 3001
@@ -99,21 +100,21 @@ services:
       MYSQL_DB: auth_db
 
   tasks-green:
-    image: ghcr.io/${OWNER_LC}/tasks:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
   projects-green:
-    image: ghcr.io/${OWNER_LC}/projects:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
   notifications-green:
-    image: ghcr.io/${OWNER_LC}/notifications:${TARGET_VERSION}
+    image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
     environment:
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
