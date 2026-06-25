@@ -1,38 +1,29 @@
-FROM node:22-alpine
-
-LABEL provides.api-version="v1"
-LABEL service.name="frontend"
-LABEL requires.auth=">=1.0.0 <=2.0.0"
-LABEL requires.projects=">=1.0.0 <=2.0.0"
-LABEL requires.notifications=">=1.0.0 <=2.0.0"
-LABEL requires.tasks=">=1.0.0 <=2.0.0"
-LABEL requires.gateway=">=1.0.0 <=2.0.0"
-LABEL service.version="2.0.0"
+# --- ÉTAPE 1 : Le Build ---
+FROM node:22-alpine AS builder
 
 WORKDIR /app
-
 ENV CI=true
 ENV PNPM_CONFIG_IGNORE_SCRIPTS=false
 ENV PNPM_CONFIG_AUTO_INSTALL_PEERS=true
 
 RUN corepack enable
 
-# 1. Copier workspace (IMPORTANT)
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 COPY package.json ./
-
-# 2. Copier tout le repo (monorepo)
 COPY . .
 
-# 3. Installer deps (workspace aware)
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
-
-# 4. Build uniquement frontend (génère le dossier de prod)
 RUN pnpm --filter frontend build
 
-# CHANGEMENT 1 : On expose le port de production par défaut de Vite (4173)
-EXPOSE 4173
+# --- ÉTAPE 2 : Le Serveur Statique ---
+FROM nginx:alpine
 
-# CHANGEMENT 2 : On remplace "dev" par "preview" pour servir les fichiers compilés
-CMD ["pnpm", "--filter", "frontend", "preview", "--host", "0.0.0.0", "--port", "4173"]
+# Ajustement avec votre chemin exact
+COPY --from=builder /app/refonte-todolist/frontend/dist /usr/share/nginx/html
+
+# On expose et configure le port 5173
+EXPOSE 5173
+RUN sed -i 's/listen       80;/listen       5173;/' /etc/nginx/conf.d/default.conf
+
+CMD ["nginx", "-g", "daemon off;"]
