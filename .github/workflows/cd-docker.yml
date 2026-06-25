@@ -294,7 +294,7 @@ jobs:
           git diff-index --quiet HEAD || (git commit -m "chore(ci): upgrade compatibility manifest" && git push origin HEAD:${{ github.ref }})
 
   deploy-integration:
-    needs: [compatibility-check]
+    needs: [compatibility-check, changes] # Indispensable pour récupérer les états des changements
     runs-on: ubuntu-latest
     if: always() && needs.compatibility-check.result == 'success'
     environment: integration # Charge les secrets de l'environnement Integration
@@ -326,22 +326,34 @@ jobs:
             # Authentification Docker sur le registre GitHub
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
             
-            # Export des variables pour Docker Compose
-            export TARGET_VERSION=${{ github.sha }}
             export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-            
-            # Injection du secret de session de l'environnement d'Intégration
             export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
+            
+            # --- INJECTION DYNAMIQUE DES TAGS ---
+            export FRONTEND_VERSION="${{ needs.changes.outputs.frontend == 'true' && github.sha || 'latest' }}"
+            export GATEWAY_VERSION="${{ needs.changes.outputs.gateway == 'true' && github.sha || 'latest' }}"
+            export AUTH_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export TASKS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export PROJECTS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export NOTIFICATIONS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            
+            export TARGET_VERSION=$AUTH_VERSION 
             
             echo "⚡ Lancement des migrations en Intégration..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
             
             echo "🔄 Lancement du déploiement Blue/Green en Intégration..."
-            export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
-            node scripts/deploy-blue-green.js
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd):/app \
+              -w /app \
+              -e GITHUB_SHA=${{ github.sha }} \
+              -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
+              -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
+              node:20-alpine node scripts/deploy-blue-green.js
 
   deploy-prod:
-    needs: [deploy-integration] # S'exécute SEULEMENT si l'intégration a réussi
+    needs: [deploy-integration, changes] # S'exécute SEULEMENT si l'intégration a réussi et utilise 'changes'
     runs-on: ubuntu-latest
     if: always() && needs.deploy-integration.result == 'success'
     environment: production # Charge les secrets de l'environnement Production (Déclenche la validation manuelle)
@@ -373,16 +385,28 @@ jobs:
             # Authentification Docker sur le registre GitHub
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
             
-            # Export des variables requises pour le fichier docker-compose.prod.yml
-            export TARGET_VERSION=${{ github.sha }}
             export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
-            
-            # Injection du secret de session de l'environnement de Production
             export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
+            
+            # --- INJECTION DYNAMIQUE DES TAGS ---
+            export FRONTEND_VERSION="${{ needs.changes.outputs.frontend == 'true' && github.sha || 'latest' }}"
+            export GATEWAY_VERSION="${{ needs.changes.outputs.gateway == 'true' && github.sha || 'latest' }}"
+            export AUTH_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export TASKS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export PROJECTS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            export NOTIFICATIONS_VERSION="${{ needs.changes.outputs.services == 'true' && github.sha || 'latest' }}"
+            
+            export TARGET_VERSION=$AUTH_VERSION 
             
             echo "⚡ Lancement des migrations en Production..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
             
             echo "🔄 Lancement de la bascule Bleu/Vert en Production..."
-            export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
-            node scripts/deploy-blue-green.js
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd):/app \
+              -w /app \
+              -e GITHUB_SHA=${{ github.sha }} \
+              -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
+              -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
+              node:20-alpine node scripts/deploy-blue-green.js
