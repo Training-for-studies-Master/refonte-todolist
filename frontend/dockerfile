@@ -15,20 +15,19 @@ COPY . .
 
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
 
-# Build du frontend uniquement
+# Build du frontend uniquement via le workspace pnpm
 RUN pnpm --filter frontend build
 
 # --- ÉTAPE 2 : Le Serveur Statique ---
 FROM nginx:alpine
 
-# CORRECTION DU CHEMIN : 
-# Puisque le build a réussi, les fichiers sont dans le dossier dist généré à la racine de l'espace de travail du builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+LABEL provides.api-version="v1"
+LABEL service.name="frontend"
+LABEL requires.gateway=">=1.0.0 <=2.0.0"
+LABEL service.version="2.0.0"
 
-# Si l'erreur persiste avec /app/dist, tentez ce chemin alternatif :
-# COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
-# ou tout simplement :
-# COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+# Le dossier dist se trouve dans le package 'frontend' défini par votre workspace
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
 # On expose et configure le port 5173
 EXPOSE 5173
