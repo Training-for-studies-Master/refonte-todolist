@@ -9,6 +9,7 @@ services:
       MYSQL_USER: root
       MYSQL_PASSWORD: root
       MYSQL_DB: auth_db
+      RUN_MIGRATION: "true"
     depends_on:
       - mysql
 
