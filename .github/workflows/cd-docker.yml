@@ -339,6 +339,13 @@ jobs:
             
             export TARGET_VERSION=$AUTH_VERSION 
             
+            # --- PRÉPARATION DE LA BASE DE DONNÉES ---
+            echo "🛢️ Démarrage de MySQL..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql
+            
+            echo "⏳ Attente du démarrage complet de MySQL (Évite ECONNREFUSED)..."
+            sleep 15
+            
             echo "⚡ Lancement des migrations en Intégration..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
             
@@ -361,7 +368,7 @@ jobs:
               node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
 
   deploy-prod:
-    needs: [deploy-integration, changes] # S'exécute SEULEMENT si l'intégration a réussi et utilise 'changes'
+    needs: [deploy-integration, changes] # S'exécute SEULEMENT si l'intégration a réussi
     runs-on: ubuntu-latest
     if: always() && needs.deploy-integration.result == 'success'
     environment: production # Charge les secrets de l'environnement Production (Déclenche la validation manuelle)
@@ -406,6 +413,14 @@ jobs:
             
             export TARGET_VERSION=$AUTH_VERSION 
             
+            # --- PRÉPARATION DE LA BASE DE DONNÉES ---
+            echo "🛢️ Démarrage de MySQL..."
+            docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d mysql
+            
+            echo "⏳ Attente du démarrage complet de MySQL (Évite ECONNREFUSED)..."
+            sleep 15
+            
+            # Lancement des migrations sur la base de données
             echo "⚡ Lancement des migrations en Production..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
             
