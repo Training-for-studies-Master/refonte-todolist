@@ -28,10 +28,11 @@ COPY . .
 # 3. Installer deps (workspace aware)
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
 
-# 4. Build uniquement frontend
+# 4. Build uniquement frontend (génère le dossier de prod)
 RUN pnpm --filter frontend build
 
-EXPOSE 5173
+# CHANGEMENT 1 : On expose le port de production par défaut de Vite (4173)
+EXPOSE 4173
 
-# Vite preview (recommandé en prod-like container)
-CMD ["pnpm", "--filter", "frontend", "dev", "--host", "0.0.0.0", "--port", "5173"]
+# CHANGEMENT 2 : On remplace "dev" par "preview" pour servir les fichiers compilés
+CMD ["pnpm", "--filter", "frontend", "preview", "--host", "0.0.0.0", "--port", "4173"]
