@@ -319,6 +319,7 @@ jobs:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
+          command_timeout: 30m
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
@@ -378,6 +379,7 @@ jobs:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          command_timeout: 30m
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
