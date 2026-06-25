@@ -319,7 +319,6 @@ jobs:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
-          command_timeout: 30m
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
@@ -350,7 +349,14 @@ jobs:
               -w /app \
               -e GITHUB_SHA=${{ github.sha }} \
               -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
-              -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
+              -e OWNER_LC \
+              -e GATEWAY_SESSION_SECRET \
+              -e FRONTEND_VERSION \
+              -e GATEWAY_VERSION \
+              -e AUTH_VERSION \
+              -e TASKS_VERSION \
+              -e PROJECTS_VERSION \
+              -e NOTIFICATIONS_VERSION \
               node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
 
   deploy-prod:
@@ -379,7 +385,6 @@ jobs:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-          command_timeout: 30m
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
@@ -410,5 +415,12 @@ jobs:
               -w /app \
               -e GITHUB_SHA=${{ github.sha }} \
               -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
-              -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
+              -e OWNER_LC \
+              -e GATEWAY_SESSION_SECRET \
+              -e FRONTEND_VERSION \
+              -e GATEWAY_VERSION \
+              -e AUTH_VERSION \
+              -e TASKS_VERSION \
+              -e PROJECTS_VERSION \
+              -e NOTIFICATIONS_VERSION \
               node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
