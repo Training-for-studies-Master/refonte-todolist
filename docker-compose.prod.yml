@@ -16,6 +16,7 @@ services:
   # --- INFRASTRUCTURE FIXE (Commune aux deux environnements) ---
   mysql:
     image: mysql:8.4
+    container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
     volumes:
@@ -24,6 +25,7 @@ services:
 
   rabbitmq:
     image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
       - "5672:5672"
       - "15672:15672"
@@ -31,9 +33,11 @@ services:
   # --- ENVIRONNEMENT BLEU ---
   frontend-blue:
     image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
+    container_name: frontend-blue
 
   gateway-blue:
     image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
+    container_name: gateway-blue
     environment:
       AUTH_URL: http://auth-blue:3001
       TASKS_URL: http://tasks-blue:3002
@@ -42,6 +46,7 @@ services:
 
   auth-blue:
     image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
+    container_name: auth-blue
     command: pnpm --filter auth start
     environment:
       PORT: 3001
@@ -52,6 +57,7 @@ services:
 
   tasks-blue:
     image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
+    container_name: tasks-blue
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
@@ -59,6 +65,7 @@ services:
 
   projects-blue:
     image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
+    container_name: projects-blue
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
@@ -66,6 +73,7 @@ services:
 
   notifications-blue:
     image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
+    container_name: notifications-blue
     environment:
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
@@ -74,9 +82,11 @@ services:
   # --- ENVIRONNEMENT VERT ---
   frontend-green:
     image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
+    container_name: frontend-green
 
   gateway-green:
     image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
+    container_name: gateway-green
     environment:
       AUTH_URL: http://auth-green:3001
       TASKS_URL: http://tasks-green:3002
@@ -85,6 +95,7 @@ services:
 
   auth-green:
     image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
+    container_name: auth-green
     command: pnpm --filter auth start
     environment:
       PORT: 3001
@@ -95,6 +106,7 @@ services:
 
   tasks-green:
     image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
+    container_name: tasks-green
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
@@ -102,6 +114,7 @@ services:
 
   projects-green:
     image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
+    container_name: projects-green
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
@@ -109,6 +122,7 @@ services:
 
   notifications-green:
     image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
+    container_name: notifications-green
     environment:
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
@@ -117,6 +131,7 @@ services:
   # --- REVERSE PROXY UNIQUE ---
   nginx:
     image: nginx:alpine
+    container_name: nginx
     ports:
       - "80:80" # Seul point d'entrée public sur votre VM Azure
     volumes:
