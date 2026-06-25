@@ -351,7 +351,7 @@ jobs:
               -e GITHUB_SHA=${{ github.sha }} \
               -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
               -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
-              node:20-alpine node scripts/deploy-blue-green.js
+              node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
 
   deploy-prod:
     needs: [deploy-integration, changes] # S'exécute SEULEMENT si l'intégration a réussi et utilise 'changes'
@@ -411,4 +411,4 @@ jobs:
               -e GITHUB_SHA=${{ github.sha }} \
               -e COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml" \
               -e FRONTEND_VERSION -e GATEWAY_VERSION -e AUTH_VERSION -e TASKS_VERSION -e PROJECTS_VERSION -e NOTIFICATIONS_VERSION \
-              node:20-alpine node scripts/deploy-blue-green.js
+              node:20-alpine sh -c "apk add --no-cache docker-cli docker-cli-compose && node scripts/deploy-blue-green.js"
