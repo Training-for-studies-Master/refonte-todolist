@@ -309,7 +309,7 @@ jobs:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
           key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
-          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*"
+          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*,mysql-init/*"
           target: "/app/refonte-todolist"
 
       # ÉTAPE 2 : Exécution des commandes Docker à distance
@@ -383,7 +383,7 @@ jobs:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*"
+          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*,mysql-init/*"
           target: "/app/refonte-todolist"
 
       # ÉTAPE 2 : Connexion SSH et déploiement des conteneurs
