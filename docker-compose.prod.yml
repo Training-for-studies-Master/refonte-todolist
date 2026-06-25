@@ -1,47 +1,122 @@
 services:  
+  # Conteneur éphémère pour exécuter les migrations de base de données avant la bascule
   auth-migrations:
-      restart: "no"
-      build:
-        context: .
-        dockerfile: services/auth/Dockerfile
-      command: pnpm --filter auth run migrate
-      environment:
-        MYSQL_HOST: mysql
-        MYSQL_USER: root
-        MYSQL_PASSWORD: root
-        MYSQL_DB: auth_db
-      depends_on:
-        - mysql
-  auth:
-    command: pnpm --filter auth start
+    restart: "no"
+    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    command: pnpm --filter auth run migrate
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: auth_db
     depends_on:
-    - auth-migrations
-  
-  # --- INFRASTRUCTURE FIXE ---
-  proxy:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - mysql
 
-  database:
-    image: mysql:8.0
-    # ... ta config BDD
+  # --- INFRASTRUCTURE FIXE (Commune aux deux environnements) ---
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
   # --- ENVIRONNEMENT BLEU ---
+  frontend-blue:
+    image: ghcr.io/${OWNER_LC}/frontend:${TARGET_VERSION}
+    ports:
+      - "5174:5173"
+
   gateway-blue:
-    image: ghcr.io/owner/gateway:v2.0.0
+    image: ghcr.io/${OWNER_LC}/gateway:${TARGET_VERSION}
     ports:
       - "8081:3000"
+    environment:
+      AUTH_URL: http://auth-blue:3001
+      TASKS_URL: http://tasks-blue:3002
+      PROJECTS_URL: http://projects-blue:3003
+      SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
+
   auth-blue:
-    image: ghcr.io/owner/auth:v2.0.0
+    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    command: pnpm --filter auth start
+    environment:
+      PORT: 3001
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: auth_db
+
+  tasks-blue:
+    image: ghcr.io/${OWNER_LC}/tasks:${TARGET_VERSION}
+    environment:
+      PORT: 3002
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
+
+  projects-blue:
+    image: ghcr.io/${OWNER_LC}/projects:${TARGET_VERSION}
+    environment:
+      PORT: 3003
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
+
+  notifications-blue:
+    image: ghcr.io/${OWNER_LC}/notifications:${TARGET_VERSION}
+    environment:
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
 
   # --- ENVIRONNEMENT VERT ---
+  frontend-green:
+    image: ghcr.io/${OWNER_LC}/frontend:${TARGET_VERSION}
+    ports:
+      - "5175:5173"
+
   gateway-green:
-    image: ghcr.io/owner/gateway:v2.0.0
+    image: ghcr.io/${OWNER_LC}/gateway:${TARGET_VERSION}
     ports:
       - "8082:3000"
+    environment:
+      AUTH_URL: http://auth-green:3001
+      TASKS_URL: http://tasks-green:3002
+      PROJECTS_URL: http://projects-green:3003
+      SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
+
   auth-green:
-    image: ghcr.io/owner/auth:v2.0.0
-  
+    image: ghcr.io/${OWNER_LC}/auth:${TARGET_VERSION}
+    command: pnpm --filter auth start
+    environment:
+      PORT: 3001
+      MYSQL_HOST: mysql
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DB: auth_db
+
+  tasks-green:
+    image: ghcr.io/${OWNER_LC}/tasks:${TARGET_VERSION}
+    environment:
+      PORT: 3002
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
+
+  projects-green:
+    image: ghcr.io/${OWNER_LC}/projects:${TARGET_VERSION}
+    environment:
+      PORT: 3003
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
+
+  notifications-green:
+    image: ghcr.io/${OWNER_LC}/notifications:${TARGET_VERSION}
+    environment:
+      MYSQL_HOST: mysql
+      RABBIT_URL: amqp://rabbitmq:5672
+
+volumes:
+  mysql_data:

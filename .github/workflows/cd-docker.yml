@@ -296,51 +296,93 @@ jobs:
   deploy-integration:
     needs: [compatibility-check]
     runs-on: ubuntu-latest
-    if: |
-      always() && 
-      needs.compatibility-check.result == 'success'
-    environment: integration # Lie ce job à l'environnement d'intégration
+    if: always() && needs.compatibility-check.result == 'success'
+    environment: integration # Charge les secrets de l'environnement Integration
     
     steps:
+      - uses: actions/checkout@v4
+
+      # ÉTAPE 1 : Envoi des fichiers de config et scripts sur la VM d'Intégration
+      - name: Copy Compose and Scripts to Integration VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST_INT }}
+          username: ${{ secrets.VM_USER_INT }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
+          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*"
+          target: "/app/refonte-todolist"
+
+      # ÉTAPE 2 : Exécution des commandes Docker à distance
       - name: Deploy to Integration via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST_INT }}
           username: ${{ secrets.VM_USER_INT }}
-          key: ${{ secrets.SSH_PRIVATE_KEY_INT }} # Partagé ou à remplacer par votre clé INT
-          envs: GITHUB_SHA
+          key: ${{ secrets.SSH_PRIVATE_KEY_INT }}
+          envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
-            git pull origin main
-            echo "⚡ Lancement des migrations en Intégration..."
+            
+            # Authentification Docker sur le registre GitHub
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+            
+            # Export des variables pour Docker Compose
             export TARGET_VERSION=${{ github.sha }}
+            export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            
+            # Injection du secret de session de l'environnement d'Intégration
+            export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
+            
+            echo "⚡ Lancement des migrations en Intégration..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
-            echo "🔄 Lancement du déploiement en Intégration..."
+            
+            echo "🔄 Lancement du déploiement Blue/Green en Intégration..."
             export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
             node scripts/deploy-blue-green.js
 
   deploy-prod:
     needs: [deploy-integration] # S'exécute SEULEMENT si l'intégration a réussi
     runs-on: ubuntu-latest
-    if: |
-      always() && 
-      needs.deploy-integration.result == 'success'
-    environment: production # Déclenche la validation manuelle configurée sur GitHub
+    if: always() && needs.deploy-integration.result == 'success'
+    environment: production # Charge les secrets de l'environnement Production (Déclenche la validation manuelle)
     
     steps:
+      - uses: actions/checkout@v4
+
+      # ÉTAPE 1 : Envoi des fichiers de configuration et scripts vers la VM de Production (via SCP)
+      - name: Copy Compose and Scripts to Production VM
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VM_HOST_PROD }}
+          username: ${{ secrets.VM_USER_PROD }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
+          source: "docker-compose.yml,docker-compose.prod.yml,scripts/*"
+          target: "/app/refonte-todolist"
+
+      # ÉTAPE 2 : Connexion SSH et déploiement des conteneurs
       - name: Deploy to Production via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VM_HOST_PROD }}
           username: ${{ secrets.VM_USER_PROD }}
           key: ${{ secrets.SSH_PRIVATE_KEY_PROD }}
-          envs: GITHUB_SHA
+          envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
-            git pull origin main
-            echo "⚡ Lancement des migrations en Production..."
+            
+            # Authentification Docker sur le registre GitHub
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
+            
+            # Export des variables requises pour le fichier docker-compose.prod.yml
             export TARGET_VERSION=${{ github.sha }}
+            export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+            
+            # Injection du secret de session de l'environnement de Production
+            export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
+            
+            echo "⚡ Lancement des migrations en Production..."
             docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm auth-migrations
+            
             echo "🔄 Lancement de la bascule Bleu/Vert en Production..."
             export COMPOSE_FILES="-f docker-compose.yml -f docker-compose.prod.yml"
             node scripts/deploy-blue-green.js
