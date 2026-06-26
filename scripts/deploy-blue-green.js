@@ -12,7 +12,6 @@ function runCommand(command) {
 }
 
 // Fonction utilitaire pour générer la liste des conteneurs cibles avec leur couleur
-// ex: ['frontend-blue', 'gateway-blue', ...]
 function getServiceNamesWithColor(color) {
   return SERVICES_TO_DEPLOY.map(service => `${service}-${color}`).join(' ');
 }
@@ -42,6 +41,16 @@ async function main() {
   const activeServicesList = getServiceNamesWithColor(activeColor);
 
   try {
+    // MODIFICATION OPTIMISATION RAM : 
+    // On éteint l'ancien frontend et l'ancienne gateway pour libérer ~1 Go de RAM immédiatement.
+    // Nginx restera debout et les autres microservices (auth, tasks...) continueront de traiter les files RabbitMQ en tâche de fond.
+    console.log(`🧹 Optimization: Stopping old frontend and gateway to free up RAM...`);
+    try {
+      execSync(`docker compose ${COMPOSE_BASE} stop frontend-${activeColor} gateway-${activeColor}`);
+    } catch (e) {
+      console.log('⚠️ Aucun ancien conteneur frontend/gateway à arrêter.');
+    }
+
     // 3. Lancer TOUTE la nouvelle version (Target)
     process.env.TARGET_VERSION = GITHUB_SHA;
     console.log(`🛰️ Deploying ${targetColor} containers (${targetServicesList})...`);
@@ -77,12 +86,19 @@ async function main() {
     }
     console.log(`✅ New version ${targetColor} is up and running smoothly!`);
 
-    // 5. Éteindre proprement l'ancienne version
-    // Vos consommateurs RabbitMQ actuels vont fermer leurs connexions, 
-    // et les nouveaux prendront le relai instantanément sans perte de message.
-    console.log(`💤 Stopping old version (${activeColor})...`);
+    // 5. Éteindre proprement le RESTE de l'ancienne version (les microservices restants)
+    console.log(`💤 Stopping remaining old version services (${activeColor})...`);
     runCommand(`docker compose ${COMPOSE_BASE} stop ${activeServicesList}`);
     
+    // 6. Recharger Nginx pour s'assurer qu'il pointe sur la nouvelle couleur
+    console.log(`📺 Reloading Nginx configuration...`);
+    try {
+      execSync(`docker compose ${COMPOSE_BASE} exec -T nginx nginx -s reload`);
+    } catch (nginxError) {
+      console.log(`⚠️ Nginx reload failed, trying a hard restart...`);
+      execSync(`docker compose ${COMPOSE_BASE} restart nginx`);
+    }
+
     console.log('🏁 Deployment finished with success!');
 
   } catch (error) {
@@ -93,8 +109,12 @@ async function main() {
       try {
         execSync(`docker compose ${COMPOSE_BASE} stop ${targetServicesList}`);
         console.log(`🛑 Defective ${targetColor} containers stopped.`);
+        
+        // En cas d'échec, on relance d'urgence l'ancien frontend et gateway qu'on avait coupés au début
+        console.log(`↩️ Restarting old frontend and gateway to restore service...`);
+        execSync(`docker compose ${COMPOSE_BASE} start frontend-${activeColor} gateway-${activeColor}`);
       } catch (rollbackError) {
-        console.error(`⚠️ Failed to stop defective containers: ${rollbackError.message}`);
+        console.error(`⚠️ Failed to rollback properly: ${rollbackError.message}`);
       }
     }
     process.exit(1);
