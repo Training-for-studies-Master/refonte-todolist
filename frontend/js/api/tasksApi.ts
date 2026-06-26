@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-const API_VERSION = "/v1";
+const API_VERSION = "/v2";
 export async function getTasks() {
   return apiFetch(`${API_VERSION}/tasks`, { method: "GET" });
 }
