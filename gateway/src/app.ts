@@ -71,7 +71,7 @@ app.post(`${API_VERSION}/auth/register`, async (req, res) => {
 });
 
 app.post(`${API_VERSION}/auth/login`, async (req, res) => {
-  const r = await fetch(`${AUTH_URL}/${SERVICE_VERSION}/login`, {
+  const r = await fetch(`${AUTH_URL}/v2/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req.body),
@@ -92,12 +92,12 @@ app.get(`${API_VERSION}/auth/me`, requireAuth, async (req, res) => {
 });
 
 app.get(`${API_VERSION}/tasks`, requireAuth, async (req, res) => {
-  const r = await fetch(`${TASKS_URL}/${SERVICE_VERSION}/tasks`, { headers: { "X-User-Id": req.session.userId! } });
+  const r = await fetch(`${TASKS_URL}/v2/tasks`, { headers: { "X-User-Id": req.session.userId! } });
   res.status(r.status).json(await r.json());
 });
 
 app.post(`${API_VERSION}/tasks`, requireAuth, async (req, res) => {
-  const r = await fetch(`${TASKS_URL}/${SERVICE_VERSION}/tasks`, {
+  const r = await fetch(`${TASKS_URL}/v2/tasks`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-User-Id": req.session.userId! },
     body: JSON.stringify(req.body),
@@ -106,7 +106,7 @@ app.post(`${API_VERSION}/tasks`, requireAuth, async (req, res) => {
 });
 
 app.post(`${API_VERSION}/tasks/:id/close`, requireAuth, async (req, res) => {
-  const r = await fetch(`${TASKS_URL}/${SERVICE_VERSION}/tasks/${req.params.id}/close`, {
+  const r = await fetch(`${TASKS_URL}/v2/tasks/${req.params.id}/close`, {
     method: "POST",
     headers: { "X-User-Id": req.session.userId! },
   });
@@ -114,7 +114,7 @@ app.post(`${API_VERSION}/tasks/:id/close`, requireAuth, async (req, res) => {
 });
 
 app.delete(`${API_VERSION}/tasks/:id`, requireAuth, async (req, res) => {
-  const r = await fetch(`${TASKS_URL}/${SERVICE_VERSION}/tasks/${req.params.id}`, {
+  const r = await fetch(`${TASKS_URL}/v2/tasks/${req.params.id}`, {
     method: "DELETE",
     headers: { "X-User-Id": req.session.userId! },
   });
@@ -122,14 +122,14 @@ app.delete(`${API_VERSION}/tasks/:id`, requireAuth, async (req, res) => {
 });
 
 app.get(`${API_VERSION}/projects`, requireAuth, async (req, res) => {
-  const r = await fetch(`${PROJECTS_URL}/${SERVICE_VERSION}/projects`, {
+  const r = await fetch(`${PROJECTS_URL}/v2/projects`, {
     headers: { "X-User-Id": req.session.userId! },
   });
   res.status(r.status).json(await r.json());
 });
 
 app.post(`${API_VERSION}/projects`, requireAuth, async (req, res) => {
-  const r = await fetch(`${PROJECTS_URL}/${SERVICE_VERSION}/projects`, {
+  const r = await fetch(`${PROJECTS_URL}/v2/projects`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -141,7 +141,7 @@ app.post(`${API_VERSION}/projects`, requireAuth, async (req, res) => {
 });
 
 app.patch(`${API_VERSION}/projects/:id`, requireAuth, async (req, res) => {
-  const r = await fetch(`${PROJECTS_URL}/${SERVICE_VERSION}/projects/${req.params.id}`, {
+  const r = await fetch(`${PROJECTS_URL}/v2/projects/${req.params.id}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
