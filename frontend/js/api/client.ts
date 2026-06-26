@@ -1,7 +1,7 @@
-export const API_BASE = "";
+export const API_BASE = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 export async function apiFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${API_BASE}:3000${path}`, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
