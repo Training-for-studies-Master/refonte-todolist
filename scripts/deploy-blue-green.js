@@ -60,7 +60,7 @@ async function main() {
     console.log(`⏳ Waiting for ${targetColor} containers to stabilize...`);
     let isHealthy = false;
     
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 12; i++) {
       await new Promise(resolve => setTimeout(resolve, 5000)); // Attend 5 secondes
       
       try {
@@ -69,15 +69,23 @@ async function main() {
         
         // On vérifie que chaque service attendu est bien dans la liste des conteneurs qui tournent
         const allRunning = SERVICES_TO_DEPLOY.every(service => runningServices.includes(`${service}-${targetColor}`));
-        
+
         if (allRunning) {
-          isHealthy = true;
-          break;
+          // Vérifier que le gateway a effectivement démarré (log "listening on 3000")
+          try {
+            const gatewayLogs = execSync(`docker compose ${COMPOSE_BASE} logs --no-color --tail 100 gateway-${targetColor}`).toString();
+            if (gatewayLogs.includes('listening on 3000')) {
+              isHealthy = true;
+              break;
+            }
+          } catch (logErr) {
+            // ignore and retry
+          }
         }
       } catch (e) {
         isHealthy = false;
       }
-      console.log(`… Retrying container healthcheck (${i + 1}/6)`);
+      console.log(`… Retrying container healthcheck (${i + 1}/12)`);
     }
 
     if (!isHealthy) {
