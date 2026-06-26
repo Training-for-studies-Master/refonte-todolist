@@ -7,5 +7,5 @@ export function startTaskServer(repo: TaskRepository, bus: RabbitPublisher, port
   const app = express();
   app.use(express.json());
   app.use(buildTaskRoutes(repo, bus));
-  app.listen(port, () => console.log(`[tasks] listening on ${port}`));
+  app.listen(port, "0.0.0.0", () => console.log(`[tasks] listening on ${port}`));
 }
