@@ -4,38 +4,8 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import cors from "cors";
 
-// Test 24.06.26 15:57
-// test 16h12
-// 16h22
-// 16h31
-// 16h41
-// 16h51
-// 17h06
-// 17h17
-// Test 25.06.206 14h14
-// 14h37
-// 15h04
-// 15h31
-// 15h44
-// 15h56
-// 16h09
-// 16h26
-// 16h42
-// 16h52
-// 17h19
-// 20h01
-// 20h17
-// 20h34
-// 20h46
-// 21h00
-// 21h16
-// 21h32
-// 21h37
-// 21h42
-// 21h46
-// 21h50
-// 21h59
-// 08h50
+// Test 26.06.2026
+// 09h06
 
 declare module "express-session" {
   interface SessionData {
