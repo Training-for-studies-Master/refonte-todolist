@@ -35,6 +35,7 @@ services:
       default:
         aliases:
           - frontend-blue
+          - frontend-active
 
   gateway-blue:
     image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
@@ -102,6 +103,7 @@ services:
       default:
         aliases:
           - frontend-green
+          - frontend-active
 
   gateway-green:
     image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
