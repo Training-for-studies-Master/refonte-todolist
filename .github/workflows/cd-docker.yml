@@ -329,7 +329,10 @@ jobs:
             
             export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
             export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
-            export ALLOWED_ORIGINS="http://74.248.97.152"
+            
+            # --- INJECTION DES SECRETS DE BASE DE DONNÉES ---
+            export DB_ROOT_PASSWORD="${{ secrets.DB_ROOT_PASSWORD }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             
             # --- INJECTION DYNAMIQUE DES TAGS ---
             export FRONTEND_VERSION="${{ needs.changes.outputs.frontend == 'true' && github.sha || 'latest' }}"
@@ -391,7 +394,10 @@ jobs:
             
             export OWNER_LC=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
             export GATEWAY_SESSION_SECRET="${{ secrets.SESSION_SECRET }}"
-            export ALLOWED_ORIGINS="http://20.215.213.76"
+
+            # --- INJECTION DES SECRETS DE BASE DE DONNÉES ---
+            export DB_ROOT_PASSWORD="${{ secrets.DB_ROOT_PASSWORD }}"
+            export DB_PASSWORD="${{ secrets.DB_PASSWORD }}"
             
             # --- INJECTION DYNAMIQUE DES TAGS ---
             export FRONTEND_VERSION="${{ needs.changes.outputs.frontend == 'true' && github.sha || 'latest' }}"
