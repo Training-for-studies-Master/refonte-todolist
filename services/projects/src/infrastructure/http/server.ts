@@ -9,7 +9,7 @@ export function startProjectServer(repo: ProjectRepository, bus: RabbitPublisher
   app.use(express.json());
   app.use(buildProjectRoutes(repo, bus));
 
-  app.listen(port, () => {
+  app.listen(port, "0.0.0.0", () => {
     console.log(`[projects] listening on ${port}`);
   });
 }
