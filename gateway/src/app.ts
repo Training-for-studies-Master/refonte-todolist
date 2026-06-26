@@ -18,6 +18,8 @@ import cors from "cors";
 // 15h09
 // 15h21
 // 15h38
+// 15h51
+// Final ?
 
 declare module "express-session" {
   interface SessionData {
