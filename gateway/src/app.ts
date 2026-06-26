@@ -4,26 +4,6 @@ import swaggerUi from "swagger-ui-express";
 import swaggerJsdoc from "swagger-jsdoc";
 import cors from "cors";
 
-// Test 26.06.2026
-// 09h06
-// 09h19
-// 09h41
-// 10h04
-// 10h37
-// 10h59
-// 13h51
-// 14h11
-// 14h38
-// 14h50
-// 15h09
-// 15h21
-// 15h38
-// 15h51
-// Final ?
-// 16h17
-// 16h26
-// 16h39
-
 declare module "express-session" {
   interface SessionData {
     userId?: string;
@@ -153,7 +133,7 @@ app.patch(`${API_VERSION}/projects/:id`, requireAuth, async (req, res) => {
 });
 
 app.post(`${API_VERSION}/projects/:id/close`, requireAuth, async (req, res) => {
-  const r = await fetch(`${PROJECTS_URL}/${SERVICE_VERSION}/projects/${req.params.id}/close`, {
+  const r = await fetch(`${PROJECTS_URL}/v2/projects/${req.params.id}/close`, {
     method: "POST",
     headers: { "X-User-Id": req.session.userId! },
   });
@@ -161,7 +141,7 @@ app.post(`${API_VERSION}/projects/:id/close`, requireAuth, async (req, res) => {
 });
 
 app.delete(`${API_VERSION}/projects/:id`, requireAuth, async (req, res) => {
-  const r = await fetch(`${PROJECTS_URL}/${SERVICE_VERSION}/projects/${req.params.id}`, {
+  const r = await fetch(`${PROJECTS_URL}/v2/projects/${req.params.id}`, {
     method: "DELETE",
     headers: { "X-User-Id": req.session.userId! },
   });
@@ -169,7 +149,7 @@ app.delete(`${API_VERSION}/projects/:id`, requireAuth, async (req, res) => {
 });
 
 app.post(`${API_VERSION}/tasks/:id/reopen`, requireAuth, async (req, res) => {
-  const r = await fetch(`${TASKS_URL}/${SERVICE_VERSION}/tasks/${req.params.id}/reopen`, {
+  const r = await fetch(`${TASKS_URL}/v2/tasks/${req.params.id}/reopen`, {
     method: "POST",
     headers: { "X-User-Id": req.session.userId! },
   });

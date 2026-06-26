@@ -70,6 +70,9 @@ services:
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DB: task_db
       RABBIT_URL: amqp://rabbitmq:5672
 
   projects:
@@ -78,6 +81,9 @@ services:
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DB: project_db
       RABBIT_URL: amqp://rabbitmq:5672
 
   notifications:
@@ -85,6 +91,9 @@ services:
     restart: always
     environment:
       MYSQL_HOST: mysql
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DB: notification_db
       RABBIT_URL: amqp://rabbitmq:5672
 
 volumes:
