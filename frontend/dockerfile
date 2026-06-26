@@ -29,8 +29,17 @@ LABEL service.version="2.0.0"
 # Le dossier dist se trouve dans le package 'frontend' défini par votre workspace
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
-# On expose et configure le port 5173
+# Configuration propre et garantie du port 5173 (évite les échecs silencieux du sed)
+RUN echo 'server { \
+    listen 5173; \
+    location / { \
+        root /usr/share/nginx/html; \
+        index index.html; \
+        try_files $uri $uri/ /index.html; \
+    } \
+}' > /etc/nginx/conf.d/default.conf
+
+# On expose le bon port
 EXPOSE 5173
-RUN sed -i 's/listen       80;/listen       5173;/' /etc/nginx/conf.d/default.conf
 
 CMD ["nginx", "-g", "daemon off;"]
