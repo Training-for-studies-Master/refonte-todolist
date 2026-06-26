@@ -36,6 +36,9 @@ app.use(
   })
 );
 
+// Health endpoint used by orchestrateurs / checks
+app.get('/health', (_req, res) => res.status(200).json({ ok: true }));
+
 function requireAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   if (!req.session.userId) return res.status(401).json({ error: "Not authenticated" });
   next();
