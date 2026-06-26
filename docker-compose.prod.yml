@@ -6,174 +6,86 @@ services:
     command: pnpm --filter auth run migrate
     environment:
       MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_USER: app_user            # Sécurisé
+      MYSQL_PASSWORD: ${DB_PASSWORD}  # Via variable .env
       MYSQL_DB: auth_db
       RUN_MIGRATION: "true"
     depends_on:
       - mysql
 
-  # --- INFRASTRUCTURE FIXE (Commune aux deux environnements) ---
+  # --- INFRASTRUCTURE FIXE ---
   mysql:
     image: mysql:8.4
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD} # Via variable .env
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql-init:/docker-entrypoint-initdb.d:ro
 
   rabbitmq:
     image: rabbitmq:3-management
+    restart: always
+    # On n'expose plus le port 5672 au public, l'inter-communication se fait dans le réseau Docker.
+    # On expose le 15672 UNIQUEMENT si tu as besoin de voir le dashboard depuis ton navigateur.
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "15672:15672" 
 
-  # --- ENVIRONNEMENT BLEU ---
-  frontend-blue:
+  # --- APPLICATION ---
+  frontend:
     image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - frontend-blue
-          - frontend-active
+    container_name: todolist-frontend
+    restart: always
+    ports:
+      - "80:80"
 
-  gateway-blue:
+  gateway:
     image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - gateway-blue
+    restart: always
+    ports:
+      - "3000:3000" 
     environment:
-      AUTH_URL: http://auth-blue:3001
-      TASKS_URL: http://tasks-blue:3002
-      PROJECTS_URL: http://projects-blue:3003
+      AUTH_URL: http://auth:3001
+      TASKS_URL: http://tasks:3002
+      PROJECTS_URL: http://projects:3003
       SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
 
-  auth-blue:
+  auth:
     image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - auth-blue
+    restart: always
     command: pnpm --filter auth start
     environment:
       PORT: 3001
       MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_DB: auth_db
 
-  tasks-blue:
+  tasks:
     image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - tasks-blue
+    restart: always
     environment:
       PORT: 3002
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
-  projects-blue:
+  projects:
     image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - projects-blue
+    restart: always
     environment:
       PORT: 3003
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
 
-  notifications-blue:
+  notifications:
     image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - notifications-blue
+    restart: always
     environment:
       MYSQL_HOST: mysql
       RABBIT_URL: amqp://rabbitmq:5672
-
-
-  # --- ENVIRONNEMENT VERT ---
-  frontend-green:
-    image: ghcr.io/${OWNER_LC}/frontend:${FRONTEND_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - frontend-green
-          - frontend-active
-
-  gateway-green:
-    image: ghcr.io/${OWNER_LC}/gateway:${GATEWAY_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - gateway-green
-    environment:
-      AUTH_URL: http://auth-green:3001
-      TASKS_URL: http://tasks-green:3002
-      PROJECTS_URL: http://projects-green:3003
-      SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
-
-  auth-green:
-    image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - auth-green
-    command: pnpm --filter auth start
-    environment:
-      PORT: 3001
-      MYSQL_HOST: mysql
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_DB: auth_db
-
-  tasks-green:
-    image: ghcr.io/${OWNER_LC}/tasks:${TASKS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - tasks-green
-    environment:
-      PORT: 3002
-      MYSQL_HOST: mysql
-      RABBIT_URL: amqp://rabbitmq:5672
-
-  projects-green:
-    image: ghcr.io/${OWNER_LC}/projects:${PROJECTS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - projects-green
-    environment:
-      PORT: 3003
-      MYSQL_HOST: mysql
-      RABBIT_URL: amqp://rabbitmq:5672
-
-  notifications-green:
-    image: ghcr.io/${OWNER_LC}/notifications:${NOTIFICATIONS_VERSION:-latest}
-    networks:
-      default:
-        aliases:
-          - notifications-green
-    environment:
-      MYSQL_HOST: mysql
-      RABBIT_URL: amqp://rabbitmq:5672
-
-
-  # --- REVERSE PROXY UNIQUE ---
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80" # Seul point d'entrée public sur votre VM Azure
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      # Monter le build frontend local pour que Nginx serve l'UI directement
-      - ./frontend:/usr/share/nginx/html:ro
-    # Le bloc strict depends_on a été retiré pour permettre la flexibilité du Blue/Green deployment.
 
 volumes:
   mysql_data:
