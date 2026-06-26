@@ -52,7 +52,6 @@ services:
       TASKS_URL: http://tasks:3002
       PROJECTS_URL: http://projects:3003
       SESSION_SECRET: ${GATEWAY_SESSION_SECRET}
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
 
   auth:
     image: ghcr.io/${OWNER_LC}/auth:${AUTH_VERSION:-latest}
