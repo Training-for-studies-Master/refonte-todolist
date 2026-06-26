@@ -44,7 +44,7 @@ export function buildCreateTaskHandler(repo: TaskRepository, bus: RabbitPublishe
 export function buildTaskRoutes(repo: TaskRepository, bus: RabbitPublisher) {
   const r = express.Router();
   const getUserId = (req: express.Request) => req.header("X-User-Id") || "";
-  const API_VERSION = "/v2";
+  const API_VERSION = "/v1";
 
   r.get(`${API_VERSION}/tasks`, async (req, res) => {
     const userId = getUserId(req);
