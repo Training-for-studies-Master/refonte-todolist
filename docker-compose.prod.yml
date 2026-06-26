@@ -169,6 +169,8 @@ services:
       - "80:80" # Seul point d'entrée public sur votre VM Azure
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # Monter le build frontend local pour que Nginx serve l'UI directement
+      - ./frontend:/usr/share/nginx/html:ro
     # Le bloc strict depends_on a été retiré pour permettre la flexibilité du Blue/Green deployment.
 
 volumes:
