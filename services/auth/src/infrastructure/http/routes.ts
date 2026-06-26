@@ -7,14 +7,13 @@ export function buildAuthRoutes(repo: AuthRepository) {
   const r = express.Router();
   
   // Définition des versions d'API
-  const V1 = "/v1";
-  const V2 = "/v2";
+  const VersionAPI = "/v2";
 
   // ==========================================
   // ROUTES V1 (Rétrocompatibilité préservée)
   // ==========================================
 
-  r.post(`${V1}/register`, async (req, res) => {
+  r.post(`${VersionAPI}/register`, async (req, res) => {
     const { username, password } = req.body ?? {};
     if (!username || !password) return res.status(400).json({ error: "Missing fields" });
 
@@ -30,7 +29,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
     res.json({ userId });
   });
 
-  r.get(`${V1}/me`, async (req, res) => {
+  r.get(`${VersionAPI}/me`, async (req, res) => {
     const userId = req.header("X-User-Id");
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -49,7 +48,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
   // ROUTES V2 (Nouvelles fonctionnalités)
   // ==========================================
 
-  r.post(`${V2}/register`, async (req, res) => {
+  r.post(`${VersionAPI}/register`, async (req, res) => {
     const { username, password, birthDate } = req.body ?? {};
     if (!username || !password) return res.status(400).json({ error: "Missing fields" });
 
@@ -75,7 +74,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
     res.json({ userId });
   });
 
-  r.get(`${V2}/me`, async (req, res) => {
+  r.get(`${VersionAPI}/me`, async (req, res) => {
     const userId = req.header("X-User-Id");
     if (!userId) return res.status(401).json({ error: "Not authenticated" });
 
@@ -104,8 +103,7 @@ export function buildAuthRoutes(repo: AuthRepository) {
     res.json({ userId: user.id });
   };
 
-  r.post(`${V1}/login`, loginHandler);
-  r.post(`${V2}/login`, loginHandler);
+  r.post(`${VersionAPI}/login`, loginHandler);
 
   return r;
 }

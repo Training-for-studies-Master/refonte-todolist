@@ -10,7 +10,7 @@ function toMysqlDatetime(date: Date): string {
 export function buildProjectRoutes(repo: ProjectRepository, bus: RabbitPublisher) {
   const r = express.Router();
   const getUserId = (req: express.Request) => req.header("X-User-Id") || "";
-  const API_VERSION = "/v1";
+  const API_VERSION = "/v2";
 
   r.get(`${API_VERSION}/projects`, async (req, res) => {
     const userId = getUserId(req);
