@@ -10,7 +10,6 @@ declare module "express-session" {
   }
 }
 
-
 const AUTH_URL = process.env.AUTH_URL || "http://auth:3001";
 const TASKS_URL = process.env.TASKS_URL || "http://tasks:3002";
 const PROJECTS_URL = process.env.PROJECTS_URL || "http://projects:3003";
