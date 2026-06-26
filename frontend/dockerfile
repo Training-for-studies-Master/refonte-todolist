@@ -1,45 +1,45 @@
-# --- ÉTAPE 1 : Le Build ---
+# --- BUILD ---
 FROM node:22-alpine AS builder
-
+ 
 WORKDIR /app
+ 
 ENV CI=true
-ENV PNPM_CONFIG_IGNORE_SCRIPTS=false
-ENV PNPM_CONFIG_AUTO_INSTALL_PEERS=true
-
+ 
 RUN corepack enable
-
+ 
 COPY pnpm-workspace.yaml ./
 COPY pnpm-lock.yaml ./
 COPY package.json ./
 COPY . .
-
+ 
 RUN pnpm install --no-frozen-lockfile --unsafe-perm
-
-# Build du frontend uniquement via le workspace pnpm
+ 
+# build frontend uniquement
 RUN pnpm --filter frontend build
-
-# --- ÉTAPE 2 : Le Serveur Statique ---
+ 
+ 
+# --- RUNTIME NGINX ---
 FROM nginx:alpine
-
+ 
 LABEL provides.api-version="v1"
 LABEL service.name="frontend"
 LABEL requires.gateway=">=1.0.0 <=2.0.0"
 LABEL service.version="2.0.0"
-
-# Le dossier dist se trouve dans le package 'frontend' défini par votre workspace
+ 
+# copie build statique
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
-
-# Configuration propre et garantie du port 5173 (évite les échecs silencieux du sed)
+ 
+# config SPA propre
 RUN echo 'server { \
-    listen 5173; \
+    listen 80; \
+    server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html; \
     location / { \
-        root /usr/share/nginx/html; \
-        index index.html; \
         try_files $uri $uri/ /index.html; \
     } \
 }' > /etc/nginx/conf.d/default.conf
-
-# On expose le bon port
-EXPOSE 5173
-
+ 
+EXPOSE 80
+ 
 CMD ["nginx", "-g", "daemon off;"]
