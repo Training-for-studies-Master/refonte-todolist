@@ -323,6 +323,10 @@ jobs:
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
+
+            # --- NETTOYAGE PRÉVENTIF ---
+            # Supprime les conteneurs arrêtés et les images non utilisées pour libérer de l'espace
+            docker system prune -f
             
             # Authentification Docker sur le registre GitHub
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
@@ -388,6 +392,10 @@ jobs:
           envs: GITHUB_SHA, GITHUB_ACTOR
           script: |
             cd /app/refonte-todolist
+
+            # --- NETTOYAGE PRÉVENTIF ---
+            # Supprime les conteneurs arrêtés et les images non utilisées pour libérer de l'espace
+            docker system prune -f
             
             # Authentification Docker sur le registre GitHub
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $GITHUB_ACTOR --password-stdin
