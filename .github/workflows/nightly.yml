@@ -44,7 +44,15 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
+      - name: Load env file
+        run: cp .env .env.ci
+
       - name: Start full stack (Docker Compose)
+        env:
+          OWNER_LC: ${{ env.OWNER_LC }}
+          DB_PASSWORD: ${{ env.DB_PASSWORD }}
+          DB_ROOT_PASSWORD: ${{ env.DB_ROOT_PASSWORD }}
+          GATEWAY_SESSION_SECRET: ${{ env.GATEWAY_SESSION_SECRET }}
         run: docker compose up -d --build
 
       - name: Wait for services
