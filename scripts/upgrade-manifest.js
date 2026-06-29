@@ -25,6 +25,15 @@ if (!manifest[serviceName]) {
   process.exit(1);
 }
 
+const service = manifest[serviceName];
+
+if (!service || typeof service.provides !== 'string') {
+  console.error(`❌ Service invalide ou "provides" manquant pour ${serviceName}`);
+  process.exit(1);
+}
+
+const currentProvides = service.provides;
+
 // 2. Fonction pour incrémenter une version SemVer (X.Y.Z)
 function bumpVersion(currentVersion, type) {
   // On nettoie si jamais il y a des symboles, mais on attend une version pure "1.0.0"
