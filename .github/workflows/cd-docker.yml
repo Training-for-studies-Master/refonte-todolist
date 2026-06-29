@@ -253,7 +253,11 @@ jobs:
           docker compose up -d
           echo "⏳ Attente du démarrage des conteneurs..."
           sleep 30
-          # ... (Reste de votre script de test) ...
+          # ... Test d'intégration ...
+          cd gateway
+          npm ci
+          echo "🚀 Lancement des tests d'intégration..."
+          npm run test
           exit $TEST_EXIT_CODE
 
       - name: Detect modified service and upgrade manifest
