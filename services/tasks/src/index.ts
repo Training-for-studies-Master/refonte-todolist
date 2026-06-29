@@ -2,7 +2,7 @@ import { MysqlTaskRepository } from "./infrastructure/db/MysqlTaskRepository";
 import { RabbitPublisher } from "./infrastructure/messaging/RabbitPublisher";
 import { RabbitConsumer } from "./infrastructure/messaging/RabbitConsumer";
 import { startTaskServer } from "./infrastructure/http/server";
-
+//eeeee
 async function main() {
   const repo = new MysqlTaskRepository();
   await repo.init();
