@@ -54,8 +54,7 @@ jobs:
             package: ./gateway/package.json
             changed: ${{ needs.changes.outputs.gateway }}
 
-    if: needs.changes.outputs.frontend == 'true' ||
-        needs.changes.outputs.gateway == 'true'
+    if: ${{ needs.changes.outputs.frontend == 'true' || needs.changes.outputs.gateway == 'true' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -134,7 +133,7 @@ jobs:
             package: ./services/tasks/package.json
             changed: ${{ needs.changes.outputs.services }}
 
-    if: needs.changes.outputs.services == 'true'
+    if: ${{ needs.changes.outputs.services == 'true' }}
 
     steps:
       - uses: actions/checkout@v4
