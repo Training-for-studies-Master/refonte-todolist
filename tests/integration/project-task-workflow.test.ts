@@ -22,7 +22,18 @@ test('POST /projects crée un projet', async () => {
   const bus = { publish: jest.fn().mockResolvedValue(undefined) };
 
   const router = buildProjectRoutes(repo as any, bus as any);
-  const postLayer = (router as any).stack.find((l: any) => l.route?.path === '/projects' && l.route.methods.post);
+  const postLayer = (router as any).stack.find((l: any) =>
+    l.route &&
+    l.route.path === '/projects' &&
+    l.route.methods &&
+    l.route.methods.post
+  );
+  if (!postLayer) {
+  throw new Error(
+    'Route /projects POST introuvable. Stack: ' +
+    JSON.stringify((router as any).stack, null, 2)
+  );
+}
   const handler = postLayer.route.stack[0].handle;
 
   const req = { header: (k: string) => (k === 'X-User-Id' ? 'user-1' : ''), body: { name: 'Projet A' } } as any;
