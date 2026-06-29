@@ -17,6 +17,7 @@ jobs:
  
     outputs:
       frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
       gateway: ${{ steps.filter.outputs.gateway }}
       services: ${{ steps.filter.outputs.services }}
  
@@ -30,6 +31,8 @@ jobs:
           filters: |
             frontend:
               - 'frontend/**'
+            backend:
+              - 'backend/**'
             gateway:
               - 'gateway/**'
             services:
@@ -50,6 +53,10 @@ jobs:
         run: npm install -g pnpm@9.0.0
  
       - run: pnpm install
+ 
+      - name: Backend tests
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm --filter backend test
  
       - name: Services tests
         if: needs.changes.outputs.services == 'true'
@@ -86,6 +93,10 @@ jobs:
         run: npm install -g pnpm@9.0.0
  
       - run: pnpm install
+ 
+      - name: Backend coverage
+        if: needs.changes.outputs.backend == 'true'
+        run: pnpm --filter backend test -- --coverage
  
       - name: Services coverage
         if: needs.changes.outputs.services == 'true'
@@ -206,6 +217,24 @@ jobs:
       - run: pnpm install
       - run: pnpm --filter frontend build
  
+  build-backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+ 
+    steps:
+      - uses: actions/checkout@v4
+ 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+ 
+      - name: Install pnpm
+        run: npm install -g pnpm@9.0.0
+ 
+      - run: pnpm install
+      - run: pnpm --filter backend build
+ 
   build-gateway:
     needs: changes
     if: needs.changes.outputs.gateway == 'true'
@@ -251,6 +280,7 @@ jobs:
       - trivy
       - sonar
       - build-frontend
+      - build-backend
       - build-gateway
       - build-services
  
@@ -268,6 +298,7 @@ jobs:
             "${{ needs.trivy.result }}"
             "${{ needs.sonar.result }}"
             "${{ needs.build-frontend.result }}"
+            "${{ needs.build-backend.result }}"
             "${{ needs.build-gateway.result }}"
             "${{ needs.build-services.result }}"
           )

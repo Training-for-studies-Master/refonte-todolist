@@ -15,6 +15,7 @@ jobs:
   changes:
     runs-on: ubuntu-latest
     outputs:
+      backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
       gateway: ${{ steps.filter.outputs.gateway }}
       services: ${{ steps.filter.outputs.services }}
@@ -27,6 +28,8 @@ jobs:
         id: filter
         with:
           filters: |
+            backend:
+              - 'backend/**'
             frontend:
               - 'frontend/**'
             gateway:
@@ -44,6 +47,11 @@ jobs:
     strategy:
       matrix:
         include:
+          - name: backend
+            file: ./backend/Dockerfile
+            package: ./backend/package.json
+            changed: ${{ needs.changes.outputs.backend }}
+
           - name: frontend
             file: ./frontend/Dockerfile
             package: ./frontend/package.json
@@ -54,7 +62,8 @@ jobs:
             package: ./gateway/package.json
             changed: ${{ needs.changes.outputs.gateway }}
 
-    if: needs.changes.outputs.frontend == 'true' ||
+    if: needs.changes.outputs.backend == 'true' ||
+        needs.changes.outputs.frontend == 'true' ||
         needs.changes.outputs.gateway == 'true'
 
     steps:
