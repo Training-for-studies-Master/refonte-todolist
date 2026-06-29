@@ -1,0 +1,25 @@
+FROM node:20-alpine
+
+LABEL provides.api-version="v1"
+LABEL service.name="backend"
+
+WORKDIR /app
+
+RUN corepack enable
+
+# Copier uniquement les fichiers workspace
+COPY pnpm-workspace.yaml ./
+COPY pnpm-lock.yaml ./
+COPY package.json ./
+
+# Copier tout le monorepo
+COPY . .
+
+RUN pnpm install --frozen-lockfile
+
+# Builder seulement ce package 
+RUN pnpm --filter backend build
+
+EXPOSE 3000
+
+CMD ["pnpm", "--filter", "backend", "start"]
