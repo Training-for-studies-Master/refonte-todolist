@@ -48,7 +48,6 @@ function bumpVersion(currentVersion, type) {
 
 // Exemple d'évolution : si ton provides est "v1", "v2", on extrait le chiffre.
 // Si c'est du SemVer pur, on utilise bumpVersion.
-const currentProvides = manifest[serviceName].provides;
 let newProvides = currentProvides;
 if (currentProvides.startsWith('v')) {
   const currentNum = parseInt(currentProvides.replace('v', ''), 10);
