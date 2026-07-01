@@ -16,6 +16,9 @@ const PROJECTS_URL = process.env.PROJECTS_URL || "http://projects:3003";
 const API_VERSION = "/v2";
 const SERVICE_VERSION = "v1";
 
+// TEST 
+// 09h41
+
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: true, credentials: true }));
